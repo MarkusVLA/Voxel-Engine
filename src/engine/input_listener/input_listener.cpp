@@ -17,16 +17,16 @@ void InputListener::keyCallback(GLFWwindow* window, int key, int scancode, int a
         if (camera) {
             switch (key) {
                 case GLFW_KEY_W:
-                    camera->processKeyboard(FORWARD, 0.05f); // Pass delta time as needed
+                    camera->processKeyboard(FORWARD, 0.2f); 
                     break;
                 case GLFW_KEY_S:
-                    camera->processKeyboard(BACKWARD, 0.05f);
+                    camera->processKeyboard(BACKWARD, 0.2f);
                     break;
                 case GLFW_KEY_A:
-                    camera->processKeyboard(LEFT, 0.05f);
+                    camera->processKeyboard(LEFT, 0.2f);
                     break;
                 case GLFW_KEY_D:
-                    camera->processKeyboard(RIGHT, 0.05f);
+                    camera->processKeyboard(RIGHT, 0.2f);
                     break;
                 default:
                     break;

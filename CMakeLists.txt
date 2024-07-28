@@ -25,7 +25,7 @@ add_executable(app
     src/engine/input_listener/input_listener.cpp
     src/engine/camera/camera.cpp
     src/world/voxel/voxel.cpp
-    src/world/world.cpp
+    src/world/chunk.cpp
 
 )
 

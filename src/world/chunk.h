@@ -4,9 +4,9 @@
 #include <vector>
 #include "voxel/voxel.h"
 
-class World {
+class Chunk {
 public:
-    World(int width, int height, int depth);
+    Chunk(int width, int height, int depth);
     void generateTerrain();
     std::vector<float> getVertexData() const;
     std::vector<unsigned int> getIndexData() const;
@@ -16,7 +16,6 @@ private:
     int height;
     int depth;
     std::vector<Voxel> voxels;
-
     int generateHeight(int x, int z) const;
 };
 

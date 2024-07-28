@@ -1,13 +1,13 @@
-#include "world.h"
+#include "chunk.h"
 #include <cstdlib>
 #include <ctime>
 
-World::World(int width, int height, int depth) : width(width), height(height), depth(depth) {
+Chunk::Chunk(int width, int height, int depth) : width(width), height(height), depth(depth) {
     std::srand(static_cast<unsigned>(std::time(0)));
     generateTerrain();
 }
 
-void World::generateTerrain() {
+void Chunk::generateTerrain() {
     for (int x = 0; x < width; ++x) {
         for (int z = 0; z < depth; ++z) {
             int y = generateHeight(x, z);
@@ -18,13 +18,13 @@ void World::generateTerrain() {
     }
 }
 
-int World::generateHeight(int x, int z) const {
+int Chunk::generateHeight(int x, int z) const {
     // Simple height generation using sine waves (for demonstration purposes)
     float scale = 0.1f;
     return static_cast<int>((std::sin(x * scale) + std::cos(z * scale)) * 5 + 10);
 }
 
-std::vector<float> World::getVertexData() const {
+std::vector<float> Chunk::getVertexData() const {
     std::vector<float> vertices;
 
     for (const auto& voxel : voxels) {
@@ -78,7 +78,7 @@ std::vector<float> World::getVertexData() const {
 
 
 
-std::vector<unsigned int> World::getIndexData() const {
+std::vector<unsigned int> Chunk::getIndexData() const {
     std::vector<unsigned int> indices;
     unsigned int index = 0;
 
