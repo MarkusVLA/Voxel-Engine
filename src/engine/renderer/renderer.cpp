@@ -5,7 +5,8 @@
 Renderer::Renderer() {
     initOpenGL();
     camera = nullptr;
-    projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
+    // Update far plane distance to 1000.0f to increase view distance
+    projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 1000.0f);
     indicesSize = 0;
 
     objectShader = new Shader("../src/shaders/triangle.vert", "../src/shaders/triangle.frag");
@@ -25,11 +26,9 @@ Renderer::~Renderer() {
 void Renderer::initOpenGL() {
     glEnable(GL_DEPTH_TEST); // Enable depth testing
     glDepthFunc(GL_LESS);    // Set the depth function
-
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
     glGenBuffers(1, &EBO);
-
     glGenVertexArrays(1, &skyboxVAO);
     glGenBuffers(1, &skyboxVBO);
 }
@@ -82,7 +81,7 @@ void Renderer::draw() {
     if (camera) {
         glm::mat4 view = glm::mat4(glm::mat3(camera->getViewMatrix())); // Remove translation from the view matrix
         skyboxShader->setMat4("view", view);
-        skyboxShader->setMat4("projection", projection);
+        skyboxShader->setMat4("projection", projection); // Ensure updated projection matrix is used
     }
     glBindVertexArray(skyboxVAO);
     glDrawArrays(GL_TRIANGLES, 0, 36);
@@ -95,11 +94,12 @@ void Renderer::draw() {
     if (camera) {
         glm::mat4 view = camera->getViewMatrix();
         objectShader->setMat4("view", view);
-        objectShader->setMat4("projection", projection);
+        objectShader->setMat4("projection", projection); // Ensure updated projection matrix is used
     }
     glBindTexture(GL_TEXTURE_2D, textureID);
     glDrawElements(GL_TRIANGLES, indicesSize, GL_UNSIGNED_INT, 0);
 }
+
 
 void Renderer::setViewport(int width, int height) {
     glViewport(0, 0, width, height);
