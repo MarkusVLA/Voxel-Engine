@@ -1,0 +1,56 @@
+#include <glad/glad.h>  // Include glad before GLFW
+#include "window.h"
+#include <iostream>
+
+Window::Window(int width, int height, const std::string& title) {
+    if (!glfwInit()) {
+        std::cerr << "Failed to initialize GLFW" << std::endl;
+        exit(EXIT_FAILURE);
+    }
+
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+    window = glfwCreateWindow(width, height, title.c_str(), NULL, NULL);
+    if (!window) {
+        std::cerr << "Failed to create GLFW window" << std::endl;
+        glfwTerminate();
+        exit(EXIT_FAILURE);
+    }
+    glfwMakeContextCurrent(window);
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+        std::cerr << "Failed to initialize GLAD" << std::endl;
+        exit(EXIT_FAILURE);
+    }
+
+    glViewport(0, 0, width, height);
+    glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    glfwSetKeyCallback(window, InputListener::keyCallback);
+}
+
+Window::~Window() {
+    glfwDestroyWindow(window);
+    glfwTerminate();
+}
+
+bool Window::shouldClose() {
+    return glfwWindowShouldClose(window);
+}
+
+void Window::swapBuffers() {
+    glfwSwapBuffers(window);
+}
+
+void Window::pollEvents() {
+    glfwPollEvents();
+}
+
+GLFWwindow* Window::getGLFWwindow() {
+    return window;
+}
+
+void Window::framebuffer_size_callback(GLFWwindow* window, int width, int height) {
+    glViewport(0, 0, width, height);
+}
