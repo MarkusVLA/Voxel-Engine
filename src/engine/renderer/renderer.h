@@ -7,27 +7,31 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include "../camera/camera.h"
+#include "shader.h"
+
 
 class Renderer {
 public:
-    Renderer(const std::string& vertexPath, const std::string& fragmentPath);
+    Renderer();
     ~Renderer();
     void draw();
     void setViewport(int width, int height);
     void setCamera(Camera* camera);
     void setMeshData(const std::vector<float>& vertices, const std::vector<unsigned int>& indices);
+    void setSkyboxData(const std::vector<float>& vertices);
+    void loadTexture(const std::string& path);
 
 private:
     unsigned int VAO, VBO, EBO;
-    unsigned int shaderProgram;
+    unsigned int skyboxVAO, skyboxVBO;
+    unsigned int textureID;
+    Shader* objectShader;
+    Shader* skyboxShader;
     Camera* camera;
     glm::mat4 projection;
-    std::string readFile(const std::string& filePath);
-    unsigned int createShader(const std::string& source, GLenum shaderType);
-    void checkCompileErrors(unsigned int shader, const std::string& type);
-    void initOpenGL(const std::string& vertexPath, const std::string& fragmentPath);
-
-    size_t indicesSize; // Store the size of the indices
+    size_t indicesSize;
+    
+    void initOpenGL();
 };
 
 #endif

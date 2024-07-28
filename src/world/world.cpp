@@ -30,27 +30,53 @@ std::vector<float> World::getVertexData() const {
     for (const auto& voxel : voxels) {
         glm::vec3 pos = voxel.getPosition();
 
-        // Add vertices for a cube
-        std::vector<glm::vec3> cubeVertices = {
-            {pos.x - 0.5f, pos.y - 0.5f, pos.z - 0.5f},
-            {pos.x + 0.5f, pos.y - 0.5f, pos.z - 0.5f},
-            {pos.x + 0.5f, pos.y + 0.5f, pos.z - 0.5f},
-            {pos.x - 0.5f, pos.y + 0.5f, pos.z - 0.5f},
-            {pos.x - 0.5f, pos.y - 0.5f, pos.z + 0.5f},
-            {pos.x + 0.5f, pos.y - 0.5f, pos.z + 0.5f},
-            {pos.x + 0.5f, pos.y + 0.5f, pos.z + 0.5f},
-            {pos.x - 0.5f, pos.y + 0.5f, pos.z + 0.5f}
+        // Add vertices for a cube with texture coordinates and normals
+        std::vector<float> cubeVertices = {
+            // positions           // texture coords  // normals
+            // Front face
+            pos.x - 0.5f, pos.y - 0.5f, pos.z + 0.5f,  0.0f, 0.0f,  0.0f, 0.0f, 1.0f,
+            pos.x + 0.5f, pos.y - 0.5f, pos.z + 0.5f,  1.0f, 0.0f,  0.0f, 0.0f, 1.0f,
+            pos.x + 0.5f, pos.y + 0.5f, pos.z + 0.5f,  1.0f, 1.0f,  0.0f, 0.0f, 1.0f,
+            pos.x - 0.5f, pos.y + 0.5f, pos.z + 0.5f,  0.0f, 1.0f,  0.0f, 0.0f, 1.0f,
+
+            // Back face
+            pos.x - 0.5f, pos.y - 0.5f, pos.z - 0.5f,  0.0f, 0.0f,  0.0f, 0.0f, -1.0f,
+            pos.x + 0.5f, pos.y - 0.5f, pos.z - 0.5f,  1.0f, 0.0f,  0.0f, 0.0f, -1.0f,
+            pos.x + 0.5f, pos.y + 0.5f, pos.z - 0.5f,  1.0f, 1.0f,  0.0f, 0.0f, -1.0f,
+            pos.x - 0.5f, pos.y + 0.5f, pos.z - 0.5f,  0.0f, 1.0f,  0.0f, 0.0f, -1.0f,
+
+            // Left face
+            pos.x - 0.5f, pos.y - 0.5f, pos.z - 0.5f,  0.0f, 0.0f,  -1.0f, 0.0f, 0.0f,
+            pos.x - 0.5f, pos.y - 0.5f, pos.z + 0.5f,  1.0f, 0.0f,  -1.0f, 0.0f, 0.0f,
+            pos.x - 0.5f, pos.y + 0.5f, pos.z + 0.5f,  1.0f, 1.0f,  -1.0f, 0.0f, 0.0f,
+            pos.x - 0.5f, pos.y + 0.5f, pos.z - 0.5f,  0.0f, 1.0f,  -1.0f, 0.0f, 0.0f,
+
+            // Right face
+            pos.x + 0.5f, pos.y - 0.5f, pos.z - 0.5f,  0.0f, 0.0f,  1.0f, 0.0f, 0.0f,
+            pos.x + 0.5f, pos.y - 0.5f, pos.z + 0.5f,  1.0f, 0.0f,  1.0f, 0.0f, 0.0f,
+            pos.x + 0.5f, pos.y + 0.5f, pos.z + 0.5f,  1.0f, 1.0f,  1.0f, 0.0f, 0.0f,
+            pos.x + 0.5f, pos.y + 0.5f, pos.z - 0.5f,  0.0f, 1.0f,  1.0f, 0.0f, 0.0f,
+
+            // Top face
+            pos.x - 0.5f, pos.y + 0.5f, pos.z - 0.5f,  0.0f, 0.0f,  0.0f, 1.0f, 0.0f,
+            pos.x + 0.5f, pos.y + 0.5f, pos.z - 0.5f,  1.0f, 0.0f,  0.0f, 1.0f, 0.0f,
+            pos.x + 0.5f, pos.y + 0.5f, pos.z + 0.5f,  1.0f, 1.0f,  0.0f, 1.0f, 0.0f,
+            pos.x - 0.5f, pos.y + 0.5f, pos.z + 0.5f,  0.0f, 1.0f,  0.0f, 1.0f, 0.0f,
+
+            // Bottom face
+            pos.x - 0.5f, pos.y - 0.5f, pos.z - 0.5f,  0.0f, 0.0f,  0.0f, -1.0f, 0.0f,
+            pos.x + 0.5f, pos.y - 0.5f, pos.z - 0.5f,  1.0f, 0.0f,  0.0f, -1.0f, 0.0f,
+            pos.x + 0.5f, pos.y - 0.5f, pos.z + 0.5f,  1.0f, 1.0f,  0.0f, -1.0f, 0.0f,
+            pos.x - 0.5f, pos.y - 0.5f, pos.z + 0.5f,  0.0f, 1.0f,  0.0f, -1.0f, 0.0f
         };
 
-        for (const auto& v : cubeVertices) {
-            vertices.push_back(v.x);
-            vertices.push_back(v.y);
-            vertices.push_back(v.z);
-        }
+        vertices.insert(vertices.end(), cubeVertices.begin(), cubeVertices.end());
     }
 
     return vertices;
 }
+
+
 
 std::vector<unsigned int> World::getIndexData() const {
     std::vector<unsigned int> indices;
@@ -58,19 +84,25 @@ std::vector<unsigned int> World::getIndexData() const {
 
     for (size_t i = 0; i < voxels.size(); ++i) {
         std::vector<unsigned int> cubeIndices = {
-            0, 1, 2, 2, 3, 0, // Front face
-            4, 5, 6, 6, 7, 4, // Back face
-            0, 1, 5, 5, 4, 0, // Bottom face
-            2, 3, 7, 7, 6, 2, // Top face
-            0, 3, 7, 7, 4, 0, // Left face
-            1, 2, 6, 6, 5, 1  // Right face
+            // Front face
+            0, 1, 2, 2, 3, 0,
+            // Back face
+            4, 5, 6, 6, 7, 4,
+            // Left face
+            8, 9, 10, 10, 11, 8,
+            // Right face
+            12, 13, 14, 14, 15, 12,
+            // Top face
+            16, 17, 18, 18, 19, 16,
+            // Bottom face
+            20, 21, 22, 22, 23, 20
         };
 
         for (auto idx : cubeIndices) {
             indices.push_back(idx + index);
         }
 
-        index += 8; // Each cube adds 8 vertices
+        index += 24; // Each cube adds 24 vertices (6 faces * 4 vertices per face)
     }
 
     return indices;

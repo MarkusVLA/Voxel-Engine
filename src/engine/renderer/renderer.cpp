@@ -1,41 +1,37 @@
 #include "renderer.h"
+#include "texture_loader.h"
 #include <iostream>
-#include <fstream>
-#include <sstream>
 
-Renderer::Renderer(const std::string& vertexPath, const std::string& fragmentPath) {
-    initOpenGL(vertexPath, fragmentPath);
+Renderer::Renderer() {
+    initOpenGL();
     camera = nullptr;
     projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
     indicesSize = 0;
+
+    objectShader = new Shader("../src/shaders/triangle.vert", "../src/shaders/triangle.frag");
+    skyboxShader = new Shader("../src/shaders/skybox.vert", "../src/shaders/skybox.frag");
 }
 
 Renderer::~Renderer() {
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
     glDeleteBuffers(1, &EBO);
-    glDeleteProgram(shaderProgram);
+    glDeleteVertexArrays(1, &skyboxVAO);
+    glDeleteBuffers(1, &skyboxVBO);
+    delete objectShader;
+    delete skyboxShader;
 }
 
-void Renderer::initOpenGL(const std::string& vertexPath, const std::string& fragmentPath) {
+void Renderer::initOpenGL() {
+    glEnable(GL_DEPTH_TEST); // Enable depth testing
+    glDepthFunc(GL_LESS);    // Set the depth function
+
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
     glGenBuffers(1, &EBO);
 
-    std::string vertexShaderSource = readFile(vertexPath);
-    std::string fragmentShaderSource = readFile(fragmentPath);
-
-    unsigned int vertexShader = createShader(vertexShaderSource, GL_VERTEX_SHADER);
-    unsigned int fragmentShader = createShader(fragmentShaderSource, GL_FRAGMENT_SHADER);
-
-    shaderProgram = glCreateProgram();
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
-    glLinkProgram(shaderProgram);
-    checkCompileErrors(shaderProgram, "PROGRAM");
-
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
+    glGenVertexArrays(1, &skyboxVAO);
+    glGenBuffers(1, &skyboxVBO);
 }
 
 void Renderer::setMeshData(const std::vector<float>& vertices, const std::vector<unsigned int>& indices) {
@@ -47,67 +43,61 @@ void Renderer::setMeshData(const std::vector<float>& vertices, const std::vector
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    // Position attribute
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
+
+    // Texture coordinate attribute
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+
+    // Normal attribute
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float)));
+    glEnableVertexAttribArray(2);
 
     indicesSize = indices.size(); // Store the size of the indices
 }
 
-std::string Renderer::readFile(const std::string& filePath) {
-    std::ifstream file(filePath);
-    if (!file) {
-        std::cerr << "Failed to open file: " << filePath << std::endl;
-        return "";
-    }
 
-    std::stringstream buffer;
-    buffer << file.rdbuf();
-    return buffer.str();
+void Renderer::setSkyboxData(const std::vector<float>& vertices) {
+    glBindVertexArray(skyboxVAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
 }
 
-unsigned int Renderer::createShader(const std::string& source, GLenum shaderType) {
-    const char* shaderSource = source.c_str();
-    unsigned int shader = glCreateShader(shaderType);
-    glShaderSource(shader, 1, &shaderSource, NULL);
-    glCompileShader(shader);
-    checkCompileErrors(shader, shaderType == GL_VERTEX_SHADER ? "VERTEX" : "FRAGMENT");
-    return shader;
-}
-
-void Renderer::checkCompileErrors(unsigned int shader, const std::string& type) {
-    int success;
-    char infoLog[1024];
-    if (type != "PROGRAM") {
-        glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-        if (!success) {
-            glGetShaderInfoLog(shader, 1024, NULL, infoLog);
-            std::cerr << "ERROR::SHADER_COMPILATION_ERROR of type: " << type << "\n" << infoLog << "\n -- --------------------------------------------------- -- " << std::endl;
-        }
-    } else {
-        glGetProgramiv(shader, GL_LINK_STATUS, &success);
-        if (!success) {
-            glGetProgramInfoLog(shader, 1024, NULL, infoLog);
-            std::cerr << "ERROR::PROGRAM_LINKING_ERROR of type: " << type << "\n" << infoLog << "\n -- --------------------------------------------------- -- " << std::endl;
-        }
-    }
+void Renderer::loadTexture(const std::string& path) {
+    textureID = TextureLoader::loadTexture(path);
 }
 
 void Renderer::draw() {
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glUseProgram(shaderProgram);
-    glBindVertexArray(VAO);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear the depth buffer
 
+    // Draw skybox first
+    glDepthFunc(GL_LEQUAL);
+    skyboxShader->use();
+    if (camera) {
+        glm::mat4 view = glm::mat4(glm::mat3(camera->getViewMatrix())); // Remove translation from the view matrix
+        skyboxShader->setMat4("view", view);
+        skyboxShader->setMat4("projection", projection);
+    }
+    glBindVertexArray(skyboxVAO);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
+    glBindVertexArray(0);
+    glDepthFunc(GL_LESS);
+
+    // Draw objects
+    objectShader->use();
+    glBindVertexArray(VAO);
     if (camera) {
         glm::mat4 view = camera->getViewMatrix();
-        glm::mat4 projection = glm::perspective(glm::radians(camera->getZoom()), 800.0f / 600.0f, 0.1f, 100.0f);
-
-        int viewLoc = glGetUniformLocation(shaderProgram, "view");
-        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
-
-        int projLoc = glGetUniformLocation(shaderProgram, "projection");
-        glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
+        objectShader->setMat4("view", view);
+        objectShader->setMat4("projection", projection);
     }
-
+    glBindTexture(GL_TEXTURE_2D, textureID);
     glDrawElements(GL_TRIANGLES, indicesSize, GL_UNSIGNED_INT, 0);
 }
 

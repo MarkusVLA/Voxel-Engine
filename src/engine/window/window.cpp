@@ -25,7 +25,7 @@ Window::Window(int width, int height, const std::string& title) {
     }
 
     glViewport(0, 0, width, height);
-    glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+    glClearColor(0.3f, 0.5f, 0.8f, 1.0f);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetKeyCallback(window, InputListener::keyCallback);
     glfwSetCursorPosCallback(window, InputListener::cursorPositionCallback);
