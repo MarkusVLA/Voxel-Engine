@@ -5,6 +5,9 @@
 
 Renderer::Renderer(const std::string& vertexPath, const std::string& fragmentPath) {
     initOpenGL(vertexPath, fragmentPath);
+    camera = nullptr;
+    projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
+    indicesSize = 0;
 }
 
 Renderer::~Renderer() {
@@ -15,32 +18,9 @@ Renderer::~Renderer() {
 }
 
 void Renderer::initOpenGL(const std::string& vertexPath, const std::string& fragmentPath) {
-    float vertices[] = {
-        0.5f,  0.5f, 0.0f,
-        0.5f, -0.5f, 0.0f,
-       -0.5f, -0.5f, 0.0f,
-       -0.5f,  0.5f, 0.0f
-    };
-
-    unsigned int indices[] = {
-       0, 1, 3,
-       1, 2, 3
-    };
-
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
     glGenBuffers(1, &EBO);
-
-    glBindVertexArray(VAO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
 
     std::string vertexShaderSource = readFile(vertexPath);
     std::string fragmentShaderSource = readFile(fragmentPath);
@@ -56,6 +36,21 @@ void Renderer::initOpenGL(const std::string& vertexPath, const std::string& frag
 
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
+}
+
+void Renderer::setMeshData(const std::vector<float>& vertices, const std::vector<unsigned int>& indices) {
+    glBindVertexArray(VAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_STATIC_DRAW);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    indicesSize = indices.size(); // Store the size of the indices
 }
 
 std::string Renderer::readFile(const std::string& filePath) {
@@ -98,12 +93,28 @@ void Renderer::checkCompileErrors(unsigned int shader, const std::string& type) 
 }
 
 void Renderer::draw() {
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glUseProgram(shaderProgram);
     glBindVertexArray(VAO);
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+    if (camera) {
+        glm::mat4 view = camera->getViewMatrix();
+        glm::mat4 projection = glm::perspective(glm::radians(camera->getZoom()), 800.0f / 600.0f, 0.1f, 100.0f);
+
+        int viewLoc = glGetUniformLocation(shaderProgram, "view");
+        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));
+
+        int projLoc = glGetUniformLocation(shaderProgram, "projection");
+        glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
+    }
+
+    glDrawElements(GL_TRIANGLES, indicesSize, GL_UNSIGNED_INT, 0);
 }
 
 void Renderer::setViewport(int width, int height) {
     glViewport(0, 0, width, height);
+}
+
+void Renderer::setCamera(Camera* cam) {
+    camera = cam;
 }

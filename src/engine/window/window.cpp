@@ -1,4 +1,4 @@
-#include <glad/glad.h>  // Include glad before GLFW
+#include <glad/glad.h>  
 #include "window.h"
 #include <iostream>
 
@@ -28,6 +28,9 @@ Window::Window(int width, int height, const std::string& title) {
     glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     glfwSetKeyCallback(window, InputListener::keyCallback);
+    glfwSetCursorPosCallback(window, InputListener::cursorPositionCallback);
+    glfwSetScrollCallback(window, InputListener::scrollCallback);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED); // Capture and hide the cursor
 }
 
 Window::~Window() {

@@ -1,6 +1,4 @@
 #include "camera.h"
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
 
 // Default camera values
 const float YAW = -90.0f;
@@ -22,16 +20,16 @@ glm::mat4 Camera::getViewMatrix() {
     return glm::lookAt(position, position + front, up);
 }
 
-void Camera::processKeyboard(int direction, float deltaTime) {
+void Camera::processKeyboard(CameraMovement direction, float deltaTime) {
     float velocity = movementSpeed * deltaTime;
-    // if (direction == GLFW_KEY_W)
-    //     position += front * velocity;
-    // if (direction == GLFW_KEY_S)
-    //     position -= front * velocity;
-    // if (direction == GLFW_KEY_A)
-    //     position -= right * velocity;
-    // if (direction == GLFW_KEY_D)
-    //     position += right * velocity;
+    if (direction == FORWARD)
+        position += front * velocity;
+    if (direction == BACKWARD)
+        position -= front * velocity;
+    if (direction == LEFT)
+        position -= right * velocity;
+    if (direction == RIGHT)
+        position += right * velocity;
 }
 
 void Camera::processMouseMovement(float xoffset, float yoffset, bool constrainPitch) {

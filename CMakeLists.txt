@@ -21,6 +21,8 @@ add_executable(app
     src/engine/window/window.cpp
     src/engine/input_listener/input_listener.cpp
     src/engine/camera/camera.cpp
+    src/world/voxel/voxel.cpp
+    src/world/world.cpp
 )
 
 target_link_libraries(app ${OPENGL_gl_LIBRARY} glm glfw glad)

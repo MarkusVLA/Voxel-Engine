@@ -15,7 +15,22 @@ void InputListener::keyCallback(GLFWwindow* window, int key, int scancode, int a
         if (key == GLFW_KEY_ESCAPE)
             glfwSetWindowShouldClose(window, true);
         if (camera) {
-            camera->processKeyboard(key, 0.05f); // Pass delta time as needed
+            switch (key) {
+                case GLFW_KEY_W:
+                    camera->processKeyboard(FORWARD, 0.05f); // Pass delta time as needed
+                    break;
+                case GLFW_KEY_S:
+                    camera->processKeyboard(BACKWARD, 0.05f);
+                    break;
+                case GLFW_KEY_A:
+                    camera->processKeyboard(LEFT, 0.05f);
+                    break;
+                case GLFW_KEY_D:
+                    camera->processKeyboard(RIGHT, 0.05f);
+                    break;
+                default:
+                    break;
+            }
         }
     }
 }
