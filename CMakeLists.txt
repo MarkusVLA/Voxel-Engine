@@ -33,6 +33,7 @@ add_executable(app
     src/world/voxel/voxel.cpp
     src/world/chunk.cpp
     src/world/skybox.cpp
+    src/world/chunk_manager.cpp
 
 )
 

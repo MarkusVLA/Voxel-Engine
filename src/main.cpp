@@ -4,8 +4,8 @@
 #include "engine/window/window.h"
 #include "engine/input_listener/input_listener.h"
 #include "engine/camera/camera.h"
-#include "world/chunk.h"
 #include "world/skybox.h"
+#include "world/chunk_manager.h"
 
 int main() {
     Window window(1200, 1000, "OpenGL Window");
@@ -14,26 +14,18 @@ int main() {
     InputListener::setCamera(&camera);
 
     SkyBox skyBox;
-    Chunk chunk(16, 4, 16, {2, 2});
-    Chunk chunk2(16, 4, 16, {0, 0});
+    ChunkManager chunkManager(16, 4, 16);
 
-    std::vector<float> vertices1 = chunk.getVertexData();
-    std::vector<unsigned int> indices1 = chunk.getIndexData();
+    chunkManager.addChunk({2, 2});
+    chunkManager.addChunk({1, 1});
+    chunkManager.addChunk({0, 0});
 
-    std::vector<float> vertices2 = chunk2.getVertexData();
-    std::vector<unsigned int> indices2 = chunk2.getIndexData();
-
-    unsigned int offsetIndex = vertices1.size() / 8; // 8 floats per vertex
-
-    vertices1.insert(vertices1.end(), vertices2.begin(), vertices2.end());
-
-    for (unsigned int index : indices2) {
-        indices1.push_back(index + offsetIndex);
-    }
+    std::vector<float> vertices = chunkManager.getVertexData();
+    std::vector<unsigned int> indices = chunkManager.getIndexData();
 
     Renderer renderer;
 
-    renderer.setMeshData(vertices1, indices1);
+    renderer.setMeshData(vertices, indices);
     renderer.setCamera(&camera);
     renderer.loadTexture("../assets/textures/test.png");
     renderer.setSkyboxData(skyBox.GetVertices());
