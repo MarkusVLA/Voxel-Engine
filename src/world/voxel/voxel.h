@@ -3,6 +3,7 @@
 
 #include <glm/glm.hpp>
 #include <vector>
+#include "types.h"
 
 class Voxel {
 public:
@@ -20,3 +21,4 @@ private:
 };
 
 #endif // VOXEL_H
+ 

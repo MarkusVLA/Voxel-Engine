@@ -31,6 +31,7 @@ add_executable(app
     src/world/chunk.cpp
     src/world/skybox.cpp
     src/world/chunk_manager.cpp
+    src/utils/perlin.cpp
 
 )
 

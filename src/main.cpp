@@ -7,7 +7,6 @@
 #include "world/skybox.h"
 #include "world/chunk_manager.h"
 
-
 int main() {
     Window window(1200, 1000, "OpenGL Window");
 
@@ -15,30 +14,22 @@ int main() {
     InputListener::setCamera(&camera);
 
     SkyBox skyBox;
-    ChunkManager chunkManager(16, 4, 16, 1); // viewDistance of 2 chunks in each direction
+
+    int worldWidth = 8;
+    int worldHeight = 8; 
+    ChunkManager chunkManager(16, 32, 16, worldWidth, worldHeight);
 
     Renderer renderer;
     renderer.setCamera(&camera);
-    renderer.loadTexture("../assets/textures/test.png");
+    renderer.loadTexture("../assets/textures/atlas.png");
     renderer.setSkyboxData(skyBox.GetVertices());
 
-    // Initial load
-    chunkManager.update(camera.getPosition());
     std::vector<float> vertices = chunkManager.getVertexData();
     std::vector<unsigned int> indices = chunkManager.getIndexData();
     renderer.setMeshData(vertices, indices);
 
     while (!window.shouldClose()) {
         window.pollEvents();
-
-        chunkManager.update(camera.getPosition());
-
-        if (chunkManager.hasChunksChanged()) {
-            std::vector<float> vertices = chunkManager.getVertexData();
-            std::vector<unsigned int> indices = chunkManager.getIndexData();
-            renderer.updateMeshData(vertices, indices);
-        }
-
         renderer.draw();
         window.swapBuffers();
     }

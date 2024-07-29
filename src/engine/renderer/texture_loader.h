@@ -6,7 +6,7 @@
 
 class TextureLoader {
 public:
-    static unsigned int loadTexture(const std::string& path);
+    static unsigned int loadTextureAtlas(const std::string& path);
 };
 
 #endif

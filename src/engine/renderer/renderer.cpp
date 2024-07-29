@@ -22,8 +22,8 @@ Renderer::~Renderer() {
 }
 
 void Renderer::initOpenGL() {
-    glEnable(GL_DEPTH_TEST); 
-    glDepthFunc(GL_LESS);   
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
 
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
@@ -37,18 +37,23 @@ void Renderer::initOpenGL() {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
-    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float)));
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(5 * sizeof(float)));
     glEnableVertexAttribArray(2);
+
+    glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(8 * sizeof(float)));
+    glEnableVertexAttribArray(3);
 
     glGenVertexArrays(1, &skyboxVAO);
     glGenBuffers(1, &skyboxVBO);
 }
+
+
 
 void Renderer::setMeshData(const std::vector<float>& vertices, const std::vector<unsigned int>& indices) {
     glBindVertexArray(VAO);
@@ -59,22 +64,21 @@ void Renderer::setMeshData(const std::vector<float>& vertices, const std::vector
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_DYNAMIC_DRAW);
 
-    indicesSize = indices.size(); 
+    indicesSize = indices.size();
 }
 
 void Renderer::updateMeshData(const std::vector<float>& vertices, const std::vector<unsigned int>& indices) {
     glBindVertexArray(VAO);
-    
-    // Orphan the old buffer by passing nullptr
+
     if (!vertices.empty()) {
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
-        glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), nullptr, GL_DYNAMIC_DRAW); // Orphan the buffer
+        glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), nullptr, GL_DYNAMIC_DRAW);
         glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_DYNAMIC_DRAW);
     }
 
     if (!indices.empty()) {
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), nullptr, GL_DYNAMIC_DRAW); // Orphan the buffer
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), nullptr, GL_DYNAMIC_DRAW);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_DYNAMIC_DRAW);
     }
 
@@ -94,7 +98,7 @@ void Renderer::setSkyboxData(const std::vector<float>& vertices) {
 }
 
 void Renderer::loadTexture(const std::string& path) {
-    textureID = TextureLoader::loadTexture(path);
+    textureID = TextureLoader::loadTextureAtlas(path);
 }
 
 void Renderer::draw() {
@@ -105,7 +109,7 @@ void Renderer::draw() {
     if (camera) {
         glm::mat4 view = glm::mat4(glm::mat3(camera->getViewMatrix()));
         skyboxShader->setMat4("view", view);
-        skyboxShader->setMat4("projection", projection); 
+        skyboxShader->setMat4("projection", projection);
     }
     glBindVertexArray(skyboxVAO);
     glDrawArrays(GL_TRIANGLES, 0, 36);
@@ -117,7 +121,7 @@ void Renderer::draw() {
     if (camera) {
         glm::mat4 view = camera->getViewMatrix();
         objectShader->setMat4("view", view);
-        objectShader->setMat4("projection", projection); 
+        objectShader->setMat4("projection", projection);
     }
     glBindTexture(GL_TEXTURE_2D, textureID);
     glDrawElements(GL_TRIANGLES, indicesSize, GL_UNSIGNED_INT, 0);

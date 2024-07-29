@@ -2,8 +2,8 @@
 #include <cstdlib>
 #include <ctime>
 
-Chunk::Chunk(int width, int height, int depth, glm::vec2 index) 
-    : width(width), height(height), depth(depth), index_(index) {
+Chunk::Chunk(int width, int height, int depth, glm::vec2 index)
+    : width(width), height(height), depth(depth), index_(index), perlinNoise() {
     std::srand(static_cast<unsigned>(std::time(0)));
     generateTerrain();
 }
@@ -13,19 +13,18 @@ void Chunk::generateTerrain() {
         for (int z = 0; z < depth; ++z) {
             int y = generateHeight(x, z);
             for (int h = 0; h < y; ++h) {
-                glm::vec3 voxelPosition(x, h, z); // local position within the chunk
-                voxels.emplace_back(voxelPosition, 1); // Type 1 for terrain blocks
+                glm::vec3 voxelPosition(x, h, z);
+                voxels.emplace_back(voxelPosition, GRASS);
             }
         }
     }
 }
 
 int Chunk::generateHeight(int x, int z) const {
-    // Use the global coordinates to generate the height
-    float scale = 0.1f;
-    float globalX = (x + index_.x * width);
-    float globalZ = (z + index_.y * depth);
-    return static_cast<int>((std::sin(globalX * scale) + std::cos(globalZ * scale)) * 5 + 10);
+    float scale = 0.05f; 
+    float globalX = (x + index_.x * width) * scale;
+    float globalZ = (z + index_.y * depth) * scale;
+    return static_cast<int>(perlinNoise.noise(globalX, globalZ) * 15 + 10);
 }
 
 std::vector<float> Chunk::getVertexData() const {
@@ -36,7 +35,6 @@ std::vector<float> Chunk::getVertexData() const {
         std::vector<float> voxelVertices = voxel.getVertexData(offset);
         vertices.insert(vertices.end(), voxelVertices.begin(), voxelVertices.end());
     }
-
     return vertices;
 }
 
@@ -47,10 +45,18 @@ std::vector<unsigned int> Chunk::getIndexData() const {
     for (const auto& voxel : voxels) {
         std::vector<unsigned int> voxelIndices = voxel.getIndexData(baseIndex);
         indices.insert(indices.end(), voxelIndices.begin(), voxelIndices.end());
-        baseIndex += 24; // Each voxel has 24 vertices
+        baseIndex += 24;
     }
 
     return indices;
+}
+
+std::vector<float> Chunk::getMesh() const {
+    // Assuming this function should return a combination of vertex and index data
+    std::vector<float> mesh = getVertexData();
+    std::vector<unsigned int> indices = getIndexData();
+    mesh.insert(mesh.end(), indices.begin(), indices.end());
+    return mesh;
 }
 
 glm::vec2 Chunk::getIndex() const {
@@ -58,5 +64,5 @@ glm::vec2 Chunk::getIndex() const {
 }
 
 bool Chunk::operator==(const Chunk& other) const {
-    return width == other.width && height == other.height && depth == other.depth && index_ == other.index_;
+    return index_ == other.index_;
 }
