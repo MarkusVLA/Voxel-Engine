@@ -14,14 +14,18 @@ void Chunk::generateTerrain() {
             int y = generateHeight(x, z);
             for (int h = 0; h < y; ++h) {
                 glm::vec3 voxelPosition(x, h, z);
-                voxels.emplace_back(voxelPosition, GRASS);
+                if (h < y / 2) {  
+                    voxels.emplace_back(voxelPosition, STONE);
+                } else {
+                    voxels.emplace_back(voxelPosition, GRASS);
+                }
             }
         }
     }
 }
 
 int Chunk::generateHeight(int x, int z) const {
-    float scale = 0.05f; 
+    float scale = 0.02f; 
     float globalX = (x + index_.x * width) * scale;
     float globalZ = (z + index_.y * depth) * scale;
     return static_cast<int>(perlinNoise.noise(globalX, globalZ) * 15 + 10);
