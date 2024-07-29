@@ -5,10 +5,8 @@
 Renderer::Renderer() {
     initOpenGL();
     camera = nullptr;
-    // Update far plane distance to 1000.0f to increase view distance
     projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 1000.0f);
     indicesSize = 0;
-
     objectShader = new Shader("../src/shaders/triangle.vert", "../src/shaders/triangle.frag");
     skyboxShader = new Shader("../src/shaders/skybox.vert", "../src/shaders/skybox.frag");
 }
@@ -24,8 +22,8 @@ Renderer::~Renderer() {
 }
 
 void Renderer::initOpenGL() {
-    glEnable(GL_DEPTH_TEST); // Enable depth testing
-    glDepthFunc(GL_LESS);    // Set the depth function
+    glEnable(GL_DEPTH_TEST); 
+    glDepthFunc(GL_LESS);   
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
     glGenBuffers(1, &EBO);
@@ -34,27 +32,24 @@ void Renderer::initOpenGL() {
 }
 
 void Renderer::setMeshData(const std::vector<float>& vertices, const std::vector<unsigned int>& indices) {
-    glBindVertexArray(VAO);
 
+    glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_STATIC_DRAW);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
 
-    // Position attribute
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
-    // Texture coordinate attribute
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
-    // Normal attribute
     glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float)));
     glEnableVertexAttribArray(2);
 
-    indicesSize = indices.size(); // Store the size of the indices
+    indicesSize = indices.size(); 
 }
 
 
@@ -73,28 +68,27 @@ void Renderer::loadTexture(const std::string& path) {
 }
 
 void Renderer::draw() {
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear the depth buffer
 
-    // Draw skybox first
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
     glDepthFunc(GL_LEQUAL);
     skyboxShader->use();
     if (camera) {
-        glm::mat4 view = glm::mat4(glm::mat3(camera->getViewMatrix())); // Remove translation from the view matrix
+        glm::mat4 view = glm::mat4(glm::mat3(camera->getViewMatrix()));
         skyboxShader->setMat4("view", view);
-        skyboxShader->setMat4("projection", projection); // Ensure updated projection matrix is used
+        skyboxShader->setMat4("projection", projection); 
     }
     glBindVertexArray(skyboxVAO);
     glDrawArrays(GL_TRIANGLES, 0, 36);
     glBindVertexArray(0);
     glDepthFunc(GL_LESS);
 
-    // Draw objects
     objectShader->use();
     glBindVertexArray(VAO);
     if (camera) {
         glm::mat4 view = camera->getViewMatrix();
         objectShader->setMat4("view", view);
-        objectShader->setMat4("projection", projection); // Ensure updated projection matrix is used
+        objectShader->setMat4("projection", projection); 
     }
     glBindTexture(GL_TEXTURE_2D, textureID);
     glDrawElements(GL_TRIANGLES, indicesSize, GL_UNSIGNED_INT, 0);

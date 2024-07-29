@@ -1,5 +1,5 @@
-#ifndef WORLD_H
-#define WORLD_H
+#ifndef CHUNK_H
+#define CHUNK_H
 
 #include <vector>
 #include "voxel/voxel.h"
@@ -19,4 +19,4 @@ private:
     int generateHeight(int x, int z) const;
 };
 
-#endif // WORLD_H
+#endif // CHUNK_H

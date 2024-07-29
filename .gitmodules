@@ -7,3 +7,6 @@
 [submodule "libs/stb"]
 	path = libs/stb
 	url = git@github.com:nothings/stb.git
+[submodule "libs/freetype"]
+	path = libs/freetype
+	url = https://github.com/freetype/freetype.git

@@ -30,7 +30,6 @@ private:
     Camera* camera;
     glm::mat4 projection;
     size_t indicesSize;
-    
     void initOpenGL();
 };
 

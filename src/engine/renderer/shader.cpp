@@ -5,9 +5,9 @@
 #include <glm/gtc/type_ptr.hpp>
 
 Shader::Shader(const std::string& vertexPath, const std::string& fragmentPath) {
+
     std::string vertexShaderSource = readFile(vertexPath);
     std::string fragmentShaderSource = readFile(fragmentPath);
-
     unsigned int vertexShader = createShader(vertexShaderSource, GL_VERTEX_SHADER);
     unsigned int fragmentShader = createShader(fragmentShaderSource, GL_FRAGMENT_SHADER);
 
@@ -57,6 +57,7 @@ unsigned int Shader::createShader(const std::string& source, GLenum shaderType) 
     checkCompileErrors(shader, shaderType == GL_VERTEX_SHADER ? "VERTEX" : "FRAGMENT");
     return shader;
 }
+
 
 void Shader::checkCompileErrors(unsigned int shader, const std::string& type) {
     int success;
