@@ -2,21 +2,23 @@
 #define CHUNK_H
 
 #include <vector>
+#include <glm/glm.hpp>
 #include "voxel/voxel.h"
 
 class Chunk {
 public:
-    Chunk(int width, int height, int depth);
-    void generateTerrain();
+    Chunk(int width, int height, int depth, glm::vec2 index);
+
     std::vector<float> getVertexData() const;
     std::vector<unsigned int> getIndexData() const;
 
 private:
-    int width;
-    int height;
-    int depth;
-    std::vector<Voxel> voxels;
+    void generateTerrain();
     int generateHeight(int x, int z) const;
+
+    int width, height, depth;
+    glm::vec2 index_;
+    std::vector<Voxel> voxels;
 };
 
 #endif // CHUNK_H

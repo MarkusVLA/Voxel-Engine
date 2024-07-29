@@ -2,7 +2,8 @@
 #include <cstdlib>
 #include <ctime>
 
-Chunk::Chunk(int width, int height, int depth) : width(width), height(height), depth(depth) {
+Chunk::Chunk(int width, int height, int depth, glm::vec2 index) 
+    : width(width), height(height), depth(depth), index_(index) {
     std::srand(static_cast<unsigned>(std::time(0)));
     generateTerrain();
 }
@@ -26,83 +27,24 @@ int Chunk::generateHeight(int x, int z) const {
 
 std::vector<float> Chunk::getVertexData() const {
     std::vector<float> vertices;
+    glm::vec3 offset(index_.x * width, 0, index_.y * depth);
 
     for (const auto& voxel : voxels) {
-        glm::vec3 pos = voxel.getPosition();
-
-        // Add vertices for a cube with texture coordinates and normals
-        std::vector<float> cubeVertices = {
-            // positions           // texture coords  // normals
-            // Front face
-            pos.x - 0.5f, pos.y - 0.5f, pos.z + 0.5f,  0.0f, 0.0f,  0.0f, 0.0f, 1.0f,
-            pos.x + 0.5f, pos.y - 0.5f, pos.z + 0.5f,  1.0f, 0.0f,  0.0f, 0.0f, 1.0f,
-            pos.x + 0.5f, pos.y + 0.5f, pos.z + 0.5f,  1.0f, 1.0f,  0.0f, 0.0f, 1.0f,
-            pos.x - 0.5f, pos.y + 0.5f, pos.z + 0.5f,  0.0f, 1.0f,  0.0f, 0.0f, 1.0f,
-
-            // Back face
-            pos.x - 0.5f, pos.y - 0.5f, pos.z - 0.5f,  0.0f, 0.0f,  0.0f, 0.0f, -1.0f,
-            pos.x + 0.5f, pos.y - 0.5f, pos.z - 0.5f,  1.0f, 0.0f,  0.0f, 0.0f, -1.0f,
-            pos.x + 0.5f, pos.y + 0.5f, pos.z - 0.5f,  1.0f, 1.0f,  0.0f, 0.0f, -1.0f,
-            pos.x - 0.5f, pos.y + 0.5f, pos.z - 0.5f,  0.0f, 1.0f,  0.0f, 0.0f, -1.0f,
-
-            // Left face
-            pos.x - 0.5f, pos.y - 0.5f, pos.z - 0.5f,  0.0f, 0.0f,  -1.0f, 0.0f, 0.0f,
-            pos.x - 0.5f, pos.y - 0.5f, pos.z + 0.5f,  1.0f, 0.0f,  -1.0f, 0.0f, 0.0f,
-            pos.x - 0.5f, pos.y + 0.5f, pos.z + 0.5f,  1.0f, 1.0f,  -1.0f, 0.0f, 0.0f,
-            pos.x - 0.5f, pos.y + 0.5f, pos.z - 0.5f,  0.0f, 1.0f,  -1.0f, 0.0f, 0.0f,
-
-            // Right face
-            pos.x + 0.5f, pos.y - 0.5f, pos.z - 0.5f,  0.0f, 0.0f,  1.0f, 0.0f, 0.0f,
-            pos.x + 0.5f, pos.y - 0.5f, pos.z + 0.5f,  1.0f, 0.0f,  1.0f, 0.0f, 0.0f,
-            pos.x + 0.5f, pos.y + 0.5f, pos.z + 0.5f,  1.0f, 1.0f,  1.0f, 0.0f, 0.0f,
-            pos.x + 0.5f, pos.y + 0.5f, pos.z - 0.5f,  0.0f, 1.0f,  1.0f, 0.0f, 0.0f,
-
-            // Top face
-            pos.x - 0.5f, pos.y + 0.5f, pos.z - 0.5f,  0.0f, 0.0f,  0.0f, 1.0f, 0.0f,
-            pos.x + 0.5f, pos.y + 0.5f, pos.z - 0.5f,  1.0f, 0.0f,  0.0f, 1.0f, 0.0f,
-            pos.x + 0.5f, pos.y + 0.5f, pos.z + 0.5f,  1.0f, 1.0f,  0.0f, 1.0f, 0.0f,
-            pos.x - 0.5f, pos.y + 0.5f, pos.z + 0.5f,  0.0f, 1.0f,  0.0f, 1.0f, 0.0f,
-
-            // Bottom face
-            pos.x - 0.5f, pos.y - 0.5f, pos.z - 0.5f,  0.0f, 0.0f,  0.0f, -1.0f, 0.0f,
-            pos.x + 0.5f, pos.y - 0.5f, pos.z - 0.5f,  1.0f, 0.0f,  0.0f, -1.0f, 0.0f,
-            pos.x + 0.5f, pos.y - 0.5f, pos.z + 0.5f,  1.0f, 1.0f,  0.0f, -1.0f, 0.0f,
-            pos.x - 0.5f, pos.y - 0.5f, pos.z + 0.5f,  0.0f, 1.0f,  0.0f, -1.0f, 0.0f
-        };
-
-        vertices.insert(vertices.end(), cubeVertices.begin(), cubeVertices.end());
+        std::vector<float> voxelVertices = voxel.getVertexData(offset);
+        vertices.insert(vertices.end(), voxelVertices.begin(), voxelVertices.end());
     }
 
     return vertices;
 }
 
-
-
 std::vector<unsigned int> Chunk::getIndexData() const {
     std::vector<unsigned int> indices;
-    unsigned int index = 0;
+    unsigned int baseIndex = 0;
 
-    for (size_t i = 0; i < voxels.size(); ++i) {
-        std::vector<unsigned int> cubeIndices = {
-            // Front face
-            0, 1, 2, 2, 3, 0,
-            // Back face
-            4, 5, 6, 6, 7, 4,
-            // Left face
-            8, 9, 10, 10, 11, 8,
-            // Right face
-            12, 13, 14, 14, 15, 12,
-            // Top face
-            16, 17, 18, 18, 19, 16,
-            // Bottom face
-            20, 21, 22, 22, 23, 20
-        };
-
-        for (auto idx : cubeIndices) {
-            indices.push_back(idx + index);
-        }
-
-        index += 24; // Each cube adds 24 vertices (6 faces * 4 vertices per face)
+    for (const auto& voxel : voxels) {
+        std::vector<unsigned int> voxelIndices = voxel.getIndexData(baseIndex);
+        indices.insert(indices.end(), voxelIndices.begin(), voxelIndices.end());
+        baseIndex += 24; // Each voxel has 24 vertices
     }
 
     return indices;

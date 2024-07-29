@@ -2,12 +2,17 @@
 #define VOXEL_H
 
 #include <glm/glm.hpp>
+#include <vector>
 
 class Voxel {
 public:
     Voxel(glm::vec3 position, int type);
+
     glm::vec3 getPosition() const;
     int getType() const;
+
+    std::vector<float> getVertexData(const glm::vec3& offset) const;
+    std::vector<unsigned int> getIndexData(unsigned int baseIndex) const;
 
 private:
     glm::vec3 position;
