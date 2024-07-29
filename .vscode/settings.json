@@ -53,6 +53,7 @@
         "unordered_map": "cpp",
         "unordered_set": "cpp",
         "__tree": "cpp",
-        "map": "cpp"
+        "map": "cpp",
+        "condition_variable": "cpp"
     }
 }

@@ -9,7 +9,6 @@
 #include "../camera/camera.h"
 #include "shader.h"
 
-
 class Renderer {
 public:
     Renderer();
@@ -20,6 +19,7 @@ public:
     void setMeshData(const std::vector<float>& vertices, const std::vector<unsigned int>& indices);
     void setSkyboxData(const std::vector<float>& vertices);
     void loadTexture(const std::string& path);
+    void updateMeshData(const std::vector<float>& vertices, const std::vector<unsigned int>& indices);
 
 private:
     unsigned int VAO, VBO, EBO;
@@ -33,4 +33,4 @@ private:
     void initOpenGL();
 };
 
-#endif
+#endif // RENDERER_H

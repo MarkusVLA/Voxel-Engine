@@ -12,6 +12,9 @@ public:
     std::vector<float> getVertexData() const;
     std::vector<unsigned int> getIndexData() const;
 
+    glm::vec2 getIndex() const;
+    bool operator==(const Chunk& other) const;
+
 private:
     void generateTerrain();
     int generateHeight(int x, int z) const;
