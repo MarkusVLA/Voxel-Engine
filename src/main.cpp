@@ -15,8 +15,8 @@ int main() {
 
     SkyBox skyBox;
 
-    int worldWidth = 6;
-    int worldHeight = 6; 
+    int worldWidth = 23;
+    int worldHeight = 23; 
     ChunkManager chunkManager(16, 64, 16, worldWidth, worldHeight);
 
     Renderer renderer;

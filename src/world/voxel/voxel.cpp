@@ -10,75 +10,115 @@ int Voxel::getType() const {
     return type;
 }
 
-std::vector<float> Voxel::getVertexData(const glm::vec3& offset) const {
+std::vector<float> Voxel::getVertexData(const glm::vec3& offset, uint8_t faceFlags) const {
     std::vector<float> vertices;
     glm::vec3 offsetPosition = position + offset;
 
-    // Add vertices for a cube with texture coordinates, normals, and voxel type
-    std::vector<float> cubeVertices = {
-        // positions                    // texture coords  // normals        // voxel type
-        // Front face
-        offsetPosition.x - 0.5f, offsetPosition.y - 0.5f, offsetPosition.z + 0.5f,  0.0f, 0.0f,  0.0f, 0.0f, 1.0f, (float)type,
-        offsetPosition.x + 0.5f, offsetPosition.y - 0.5f, offsetPosition.z + 0.5f,  1.0f, 0.0f,  0.0f, 0.0f, 1.0f, (float)type,
-        offsetPosition.x + 0.5f, offsetPosition.y + 0.5f, offsetPosition.z + 0.5f,  1.0f, 1.0f,  0.0f, 0.0f, 1.0f, (float)type,
-        offsetPosition.x - 0.5f, offsetPosition.y + 0.5f, offsetPosition.z + 0.5f,  0.0f, 1.0f,  0.0f, 0.0f, 1.0f, (float)type,
+    // Front face
+    if (faceFlags & FACE_FRONT) {
+        vertices.insert(vertices.end(), {
+            offsetPosition.x - 0.5f, offsetPosition.y - 0.5f, offsetPosition.z + 0.5f,  0.0f, 0.0f,  0.0f, 0.0f, 1.0f, static_cast<float>(type),
+            offsetPosition.x + 0.5f, offsetPosition.y - 0.5f, offsetPosition.z + 0.5f,  1.0f, 0.0f,  0.0f, 0.0f, 1.0f, static_cast<float>(type),
+            offsetPosition.x + 0.5f, offsetPosition.y + 0.5f, offsetPosition.z + 0.5f,  1.0f, 1.0f,  0.0f, 0.0f, 1.0f, static_cast<float>(type),
+            offsetPosition.x - 0.5f, offsetPosition.y + 0.5f, offsetPosition.z + 0.5f,  0.0f, 1.0f,  0.0f, 0.0f, 1.0f, static_cast<float>(type)
+        });
+    }
 
-        // Back face
-        offsetPosition.x - 0.5f, offsetPosition.y - 0.5f, offsetPosition.z - 0.5f,  0.0f, 0.0f,  0.0f, 0.0f, -1.0f, (float)type,
-        offsetPosition.x + 0.5f, offsetPosition.y - 0.5f, offsetPosition.z - 0.5f,  1.0f, 0.0f,  0.0f, 0.0f, -1.0f, (float)type,
-        offsetPosition.x + 0.5f, offsetPosition.y + 0.5f, offsetPosition.z - 0.5f,  1.0f, 1.0f,  0.0f, 0.0f, -1.0f, (float)type,
-        offsetPosition.x - 0.5f, offsetPosition.y + 0.5f, offsetPosition.z - 0.5f,  0.0f, 1.0f,  0.0f, 0.0f, -1.0f, (float)type,
+    // Back face
+    if (faceFlags & FACE_BACK) {
+        vertices.insert(vertices.end(), {
+            offsetPosition.x - 0.5f, offsetPosition.y - 0.5f, offsetPosition.z - 0.5f,  0.0f, 0.0f,  0.0f, 0.0f, -1.0f, static_cast<float>(type),
+            offsetPosition.x + 0.5f, offsetPosition.y - 0.5f, offsetPosition.z - 0.5f,  1.0f, 0.0f,  0.0f, 0.0f, -1.0f, static_cast<float>(type),
+            offsetPosition.x + 0.5f, offsetPosition.y + 0.5f, offsetPosition.z - 0.5f,  1.0f, 1.0f,  0.0f, 0.0f, -1.0f, static_cast<float>(type),
+            offsetPosition.x - 0.5f, offsetPosition.y + 0.5f, offsetPosition.z - 0.5f,  0.0f, 1.0f,  0.0f, 0.0f, -1.0f, static_cast<float>(type)
+        });
+    }
 
-        // Left face
-        offsetPosition.x - 0.5f, offsetPosition.y - 0.5f, offsetPosition.z - 0.5f,  0.0f, 0.0f,  -1.0f, 0.0f, 0.0f, (float)type,
-        offsetPosition.x - 0.5f, offsetPosition.y - 0.5f, offsetPosition.z + 0.5f,  1.0f, 0.0f,  -1.0f, 0.0f, 0.0f, (float)type,
-        offsetPosition.x - 0.5f, offsetPosition.y + 0.5f, offsetPosition.z + 0.5f,  1.0f, 1.0f,  -1.0f, 0.0f, 0.0f, (float)type,
-        offsetPosition.x - 0.5f, offsetPosition.y + 0.5f, offsetPosition.z - 0.5f,  0.0f, 1.0f,  -1.0f, 0.0f, 0.0f, (float)type,
+    // Left face
+    if (faceFlags & FACE_LEFT) {
+        vertices.insert(vertices.end(), {
+            offsetPosition.x - 0.5f, offsetPosition.y - 0.5f, offsetPosition.z - 0.5f,  0.0f, 0.0f,  -1.0f, 0.0f, 0.0f, static_cast<float>(type),
+            offsetPosition.x - 0.5f, offsetPosition.y - 0.5f, offsetPosition.z + 0.5f,  1.0f, 0.0f,  -1.0f, 0.0f, 0.0f, static_cast<float>(type),
+            offsetPosition.x - 0.5f, offsetPosition.y + 0.5f, offsetPosition.z + 0.5f,  1.0f, 1.0f,  -1.0f, 0.0f, 0.0f, static_cast<float>(type),
+            offsetPosition.x - 0.5f, offsetPosition.y + 0.5f, offsetPosition.z - 0.5f,  0.0f, 1.0f,  -1.0f, 0.0f, 0.0f, static_cast<float>(type)
+        });
+    }
 
-        // Right face
-        offsetPosition.x + 0.5f, offsetPosition.y - 0.5f, offsetPosition.z - 0.5f,  0.0f, 0.0f,  1.0f, 0.0f, 0.0f, (float)type,
-        offsetPosition.x + 0.5f, offsetPosition.y - 0.5f, offsetPosition.z + 0.5f,  1.0f, 0.0f,  1.0f, 0.0f, 0.0f, (float)type,
-        offsetPosition.x + 0.5f, offsetPosition.y + 0.5f, offsetPosition.z + 0.5f,  1.0f, 1.0f,  1.0f, 0.0f, 0.0f, (float)type,
-        offsetPosition.x + 0.5f, offsetPosition.y + 0.5f, offsetPosition.z - 0.5f,  0.0f, 1.0f,  1.0f, 0.0f, 0.0f, (float)type,
+    // Right face
+    if (faceFlags & FACE_RIGHT) {
+        vertices.insert(vertices.end(), {
+            offsetPosition.x + 0.5f, offsetPosition.y - 0.5f, offsetPosition.z - 0.5f,  0.0f, 0.0f,  1.0f, 0.0f, 0.0f, static_cast<float>(type),
+            offsetPosition.x + 0.5f, offsetPosition.y - 0.5f, offsetPosition.z + 0.5f,  1.0f, 0.0f,  1.0f, 0.0f, 0.0f, static_cast<float>(type),
+            offsetPosition.x + 0.5f, offsetPosition.y + 0.5f, offsetPosition.z + 0.5f,  1.0f, 1.0f,  1.0f, 0.0f, 0.0f, static_cast<float>(type),
+            offsetPosition.x + 0.5f, offsetPosition.y + 0.5f, offsetPosition.z - 0.5f,  0.0f, 1.0f,  1.0f, 0.0f, 0.0f, static_cast<float>(type)
+        });
+    }
 
-        // Top face
-        offsetPosition.x - 0.5f, offsetPosition.y + 0.5f, offsetPosition.z - 0.5f,  0.0f, 0.0f,  0.0f, 1.0f, 0.0f, (float)type,
-        offsetPosition.x + 0.5f, offsetPosition.y + 0.5f, offsetPosition.z - 0.5f,  1.0f, 0.0f,  0.0f, 1.0f, 0.0f, (float)type,
-        offsetPosition.x + 0.5f, offsetPosition.y + 0.5f, offsetPosition.z + 0.5f,  1.0f, 1.0f,  0.0f, 1.0f, 0.0f, (float)type,
-        offsetPosition.x - 0.5f, offsetPosition.y + 0.5f, offsetPosition.z + 0.5f,  0.0f, 1.0f,  0.0f, 1.0f, 0.0f, (float)type,
+    // Top face
+    if (faceFlags & FACE_TOP) {
+        vertices.insert(vertices.end(), {
+            offsetPosition.x - 0.5f, offsetPosition.y + 0.5f, offsetPosition.z - 0.5f,  0.0f, 0.0f,  0.0f, 1.0f, 0.0f, static_cast<float>(type),
+            offsetPosition.x + 0.5f, offsetPosition.y + 0.5f, offsetPosition.z - 0.5f,  1.0f, 0.0f,  0.0f, 1.0f, 0.0f, static_cast<float>(type),
+            offsetPosition.x + 0.5f, offsetPosition.y + 0.5f, offsetPosition.z + 0.5f,  1.0f, 1.0f,  0.0f, 1.0f, 0.0f, static_cast<float>(type),
+            offsetPosition.x - 0.5f, offsetPosition.y + 0.5f, offsetPosition.z + 0.5f,  0.0f, 1.0f,  0.0f, 1.0f, 0.0f, static_cast<float>(type)
+        });
+    }
 
-        // Bottom face
-        offsetPosition.x - 0.5f, offsetPosition.y - 0.5f, offsetPosition.z - 0.5f,  0.0f, 0.0f,  0.0f, -1.0f, 0.0f, (float)type,
-        offsetPosition.x + 0.5f, offsetPosition.y - 0.5f, offsetPosition.z - 0.5f,  1.0f, 0.0f,  0.0f, -1.0f, 0.0f, (float)type,
-        offsetPosition.x + 0.5f, offsetPosition.y - 0.5f, offsetPosition.z + 0.5f,  1.0f, 1.0f,  0.0f, -1.0f, 0.0f, (float)type,
-        offsetPosition.x - 0.5f, offsetPosition.y - 0.5f, offsetPosition.z + 0.5f,  0.0f, 1.0f,  0.0f, -1.0f, 0.0f, (float)type
-    };
-
-    vertices.insert(vertices.end(), cubeVertices.begin(), cubeVertices.end());
+    // Bottom face
+    if (faceFlags & FACE_BOTTOM) {
+        vertices.insert(vertices.end(), {
+            offsetPosition.x - 0.5f, offsetPosition.y - 0.5f, offsetPosition.z - 0.5f,  0.0f, 0.0f,  0.0f, -1.0f, 0.0f, static_cast<float>(type),
+            offsetPosition.x + 0.5f, offsetPosition.y - 0.5f, offsetPosition.z - 0.5f,  1.0f, 0.0f,  0.0f, -1.0f, 0.0f, static_cast<float>(type),
+            offsetPosition.x + 0.5f, offsetPosition.y - 0.5f, offsetPosition.z + 0.5f,  1.0f, 1.0f,  0.0f, -1.0f, 0.0f, static_cast<float>(type),
+            offsetPosition.x - 0.5f, offsetPosition.y - 0.5f, offsetPosition.z + 0.5f,  0.0f, 1.0f,  0.0f, -1.0f, 0.0f, static_cast<float>(type)
+        });
+    }
 
     return vertices;
 }
 
-std::vector<unsigned int> Voxel::getIndexData(unsigned int baseIndex) const {
+std::vector<unsigned int> Voxel::getIndexData(unsigned int baseIndex, uint8_t faceFlags) const {
     std::vector<unsigned int> indices;
+    unsigned int faceOffset = 0;
 
-    std::vector<unsigned int> cubeIndices = {
-        // Front face
-        0, 1, 2, 2, 3, 0,
-        // Back face
-        4, 5, 6, 6, 7, 4,
-        // Left face
-        8, 9, 10, 10, 11, 8,
-        // Right face
-        12, 13, 14, 14, 15, 12,
-        // Top face
-        16, 17, 18, 18, 19, 16,
-        // Bottom face
-        20, 21, 22, 22, 23, 20
-    };
+    // Define indices for a single face
+    const std::vector<unsigned int> faceIndices = {0, 1, 2, 2, 3, 0};
 
-    for (auto idx : cubeIndices) {
-        indices.push_back(idx + baseIndex);
+    // Add indices based on face flags
+    if (faceFlags & FACE_FRONT) {
+        for (unsigned int idx : faceIndices) {
+            indices.push_back(baseIndex + faceOffset + idx);
+        }
+        faceOffset += 4;
+    }
+    if (faceFlags & FACE_BACK) {
+        for (unsigned int idx : faceIndices) {
+            indices.push_back(baseIndex + faceOffset + idx);
+        }
+        faceOffset += 4;
+    }
+    if (faceFlags & FACE_LEFT) {
+        for (unsigned int idx : faceIndices) {
+            indices.push_back(baseIndex + faceOffset + idx);
+        }
+        faceOffset += 4;
+    }
+    if (faceFlags & FACE_RIGHT) {
+        for (unsigned int idx : faceIndices) {
+            indices.push_back(baseIndex + faceOffset + idx);
+        }
+        faceOffset += 4;
+    }
+    if (faceFlags & FACE_TOP) {
+        for (unsigned int idx : faceIndices) {
+            indices.push_back(baseIndex + faceOffset + idx);
+        }
+        faceOffset += 4;
+    }
+    if (faceFlags & FACE_BOTTOM) {
+        for (unsigned int idx : faceIndices) {
+            indices.push_back(baseIndex + faceOffset + idx);
+        }
     }
 
     return indices;
