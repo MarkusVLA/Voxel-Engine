@@ -3,13 +3,16 @@
 
 #include <unordered_map>
 #include <vector>
+#include <queue>
 #include <glm/glm.hpp>
 #include <memory>
 #include <mutex>
 #include <thread>
 #include <atomic>
+#include <functional>
 #include "chunk.h"
 #include "../../utils/hash.h"
+#include "../../utils/thread_safe_queue.h"
 
 class ChunkManager {
 public:
@@ -17,30 +20,44 @@ public:
     ~ChunkManager();
 
     void updatePlayerPosition(const glm::vec3& playerPos);
-    std::vector<float> getVertexData();
-    std::vector<unsigned int> getIndexData();
-    const std::unordered_map<glm::ivec2, std::unique_ptr<Chunk>, IVec2Hash>& getChunks() const;
     std::vector<glm::ivec2> getNewlyLoadedChunks();
     std::vector<glm::ivec2> getUnloadedChunks();
     void clearChunkChanges();
-    std::unique_ptr<Chunk>& getChunk(const glm::ivec2& chunkPos);
+    std::shared_ptr<Chunk> getChunk(const glm::ivec2& chunkPos);
+    ThreadSafeQueue<std::tuple<glm::ivec2, std::vector<float>, std::vector<unsigned int>>>& getRenderQueue();
 
 private:
+    struct ChunkTask {
+        glm::ivec2 chunkPos;
+        float priority;
+        
+        bool operator<(const ChunkTask& other) const {
+            return priority > other.priority; // Higher priority first
+        }
+    };
+
     int chunkWidth, chunkHeight, chunkDepth;
     int viewDistance;
     glm::vec3 playerPosition;
-    std::unordered_map<glm::ivec2, std::unique_ptr<Chunk>, IVec2Hash> chunks;
+    std::unordered_map<glm::ivec2, std::shared_ptr<Chunk>, IVec2Hash> chunks;
     std::vector<glm::ivec2> newlyLoadedChunks;
     std::vector<glm::ivec2> unloadedChunks;
-    
-    std::thread workerThread;
+    std::vector<std::thread> workers;
     std::mutex chunksMutex;
     std::atomic_bool running;
+    ThreadSafeQueue<std::function<void()>> taskQueue;
+    ThreadSafeQueue<std::tuple<glm::ivec2, std::vector<float>, std::vector<unsigned int>>> renderQueue;
+    glm::ivec2 lastLoadedCenterChunk;
+    std::priority_queue<ChunkTask> priorityTaskQueue;
 
     void loadChunks();
     void unloadChunks();
-    void worker();
     glm::ivec2 worldToChunkCoords(const glm::vec3& worldPos);
+    void startWorkers(size_t numWorkers);
+    void workerFunction();
+    void expandLoadedArea(const glm::ivec2& newCenterChunk);
+    bool isChunkInLoadDistance(const glm::ivec2& chunkPos, const glm::ivec2& centerChunk);
+    float calculateChunkPriority(const glm::ivec2& chunkPos, const glm::ivec2& playerChunk);
 };
 
 #endif // CHUNKMANAGER_H

@@ -1,16 +1,21 @@
+// ChunkManager.cpp
+
 #include "chunk_manager.h"
 #include <iostream>
 #include <cmath>
 
 ChunkManager::ChunkManager(int chunkWidth, int chunkHeight, int chunkDepth, int viewDistance)
-    : chunkWidth(chunkWidth), chunkHeight(chunkHeight), chunkDepth(chunkDepth), viewDistance(viewDistance), running(true) {
-    workerThread = std::thread(&ChunkManager::worker, this);
+    : chunkWidth(chunkWidth), chunkHeight(chunkHeight), chunkDepth(chunkDepth), viewDistance(viewDistance), 
+      running(true), lastLoadedCenterChunk(0, 0) {
+    startWorkers(2); 
 }
 
 ChunkManager::~ChunkManager() {
     running = false;
-    if (workerThread.joinable()) {
-        workerThread.join();
+    for (auto& worker : workers) {
+        if (worker.joinable()) {
+            worker.join();
+        }
     }
 }
 
@@ -23,28 +28,18 @@ glm::ivec2 ChunkManager::worldToChunkCoords(const glm::vec3& worldPos) {
 
 void ChunkManager::loadChunks() {
     glm::ivec2 playerChunk = worldToChunkCoords(playerPosition);
-
-    for (int x = -viewDistance; x <= viewDistance; ++x) {
-        for (int z = -viewDistance; z <= viewDistance; ++z) {
-            glm::ivec2 chunkPos = playerChunk + glm::ivec2(x, z);
-
-            if (chunks.find(chunkPos) == chunks.end()) {
-                chunks[chunkPos] = std::make_unique<Chunk>(chunkWidth, chunkHeight, chunkDepth, glm::vec2(chunkPos));
-                newlyLoadedChunks.push_back(chunkPos);
-                std::cout << "Loaded chunk at: " << chunkPos.x << ", " << chunkPos.y << std::endl;
-            }
-        }
-    }
+    expandLoadedArea(playerChunk);
 }
 
 void ChunkManager::unloadChunks() {
     glm::ivec2 playerChunk = worldToChunkCoords(playerPosition);
+    std::lock_guard<std::mutex> lock(chunksMutex);
 
-    for (auto it = chunks.begin(); it != chunks.end(); ) {
+    for (auto it = chunks.begin(); it != chunks.end();) {
         glm::ivec2 chunkPos = it->first;
-        glm::ivec2 diff = glm::abs(chunkPos - playerChunk);
-
-        if (diff.x > viewDistance || diff.y > viewDistance) {
+        
+        if (!isChunkInLoadDistance(chunkPos, playerChunk)) {
+            renderQueue.push({chunkPos, {}, {}});  // Empty vectors to signal chunk removal
             unloadedChunks.push_back(chunkPos);
             std::cout << "Unloaded chunk at: " << chunkPos.x << ", " << chunkPos.y << std::endl;
             it = chunks.erase(it);
@@ -54,50 +49,33 @@ void ChunkManager::unloadChunks() {
     }
 }
 
-void ChunkManager::updatePlayerPosition(const glm::vec3& playerPos) {
-    std::lock_guard<std::mutex> lock(chunksMutex);
-    playerPosition = playerPos;
+void ChunkManager::updatePlayerPosition(const glm::vec3& position) {
+    playerPosition = position;
+    glm::ivec2 currentChunk = worldToChunkCoords(position);
+    
+    if (currentChunk != lastLoadedCenterChunk) {
+        expandLoadedArea(currentChunk);
+        lastLoadedCenterChunk = currentChunk;
+    }
+    
+    unloadChunks();
 }
 
-void ChunkManager::worker() {
+void ChunkManager::startWorkers(size_t numWorkers) {
+    for (size_t i = 0; i < numWorkers; ++i) {
+        workers.emplace_back(&ChunkManager::workerFunction, this);
+    }
+}
+
+void ChunkManager::workerFunction() {
     while (running) {
-        {
-            std::lock_guard<std::mutex> lock(chunksMutex);
-            loadChunks();
-            unloadChunks();
+        std::function<void()> task;
+        if (taskQueue.tryPop(task)) {
+            task();
+        } else {
+            std::this_thread::yield();
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(100)); // Adjust sleep time as needed
     }
-}
-
-std::vector<float> ChunkManager::getVertexData() {
-    std::lock_guard<std::mutex> lock(chunksMutex);
-    std::vector<float> vertices;
-    for (const auto& pair : chunks) {
-        const auto& chunk = pair.second;
-        std::vector<float> chunkVertices = chunk->getVertexData();
-        vertices.insert(vertices.end(), chunkVertices.begin(), chunkVertices.end());
-    }
-    return vertices;
-}
-
-std::vector<unsigned int> ChunkManager::getIndexData() {
-    std::lock_guard<std::mutex> lock(chunksMutex);
-    std::vector<unsigned int> indices;
-    unsigned int baseIndex = 0;
-    for (const auto& pair : chunks) {
-        const auto& chunk = pair.second;
-        std::vector<unsigned int> chunkIndices = chunk->getIndexData();
-        for (unsigned int index : chunkIndices) {
-            indices.push_back(index + baseIndex);
-        }
-        baseIndex += chunk->getVertexData().size() / 9;
-    }
-    return indices;
-}
-
-const std::unordered_map<glm::ivec2, std::unique_ptr<Chunk>, IVec2Hash>& ChunkManager::getChunks() const {
-    return chunks;
 }
 
 std::vector<glm::ivec2> ChunkManager::getNewlyLoadedChunks() {
@@ -116,12 +94,66 @@ void ChunkManager::clearChunkChanges() {
     unloadedChunks.clear();
 }
 
-std::unique_ptr<Chunk>& ChunkManager::getChunk(const glm::ivec2& chunkPos) {
+std::shared_ptr<Chunk> ChunkManager::getChunk(const glm::ivec2& chunkPos) {
     std::lock_guard<std::mutex> lock(chunksMutex);
     auto it = chunks.find(chunkPos);
     if (it != chunks.end()) {
         return it->second;
     }
-    static std::unique_ptr<Chunk> nullChunk;
-    return nullChunk;
+    return nullptr;
+}
+
+ThreadSafeQueue<std::tuple<glm::ivec2, std::vector<float>, std::vector<unsigned int>>>& ChunkManager::getRenderQueue() {
+    return renderQueue;
+}
+
+void ChunkManager::expandLoadedArea(const glm::ivec2& newCenterChunk) {
+    int start_x = newCenterChunk.x - viewDistance;
+    int end_x = newCenterChunk.x + viewDistance;
+    int start_z = newCenterChunk.y - viewDistance;
+    int end_z = newCenterChunk.y + viewDistance;
+
+    for (int x = start_x; x <= end_x; ++x) {
+        for (int z = start_z; z <= end_z; ++z) {
+            glm::ivec2 chunkPos(x, z);
+            
+            std::lock_guard<std::mutex> lock(chunksMutex);
+            if (chunks.find(chunkPos) == chunks.end()) {
+                float priority = calculateChunkPriority(chunkPos, newCenterChunk);
+                priorityTaskQueue.push({chunkPos, priority});
+            }
+        }
+    }
+
+    // Process prioritized tasks
+    while (!priorityTaskQueue.empty()) {
+        auto task = priorityTaskQueue.top();
+        priorityTaskQueue.pop();
+        
+        taskQueue.push([this, task] {
+            auto chunk = std::make_shared<Chunk>(chunkWidth, chunkHeight, chunkDepth, task.chunkPos);
+            std::vector<float> vertices = chunk->getVertexData();
+            std::vector<unsigned int> indices = chunk->getIndexData();
+            
+            {
+                std::lock_guard<std::mutex> lock(chunksMutex);
+                chunks[task.chunkPos] = chunk;
+                newlyLoadedChunks.push_back(task.chunkPos);
+            }
+            
+            renderQueue.push({task.chunkPos, std::move(vertices), std::move(indices)});
+            
+            std::cout << "Loaded chunk at: " << task.chunkPos.x << ", " << task.chunkPos.y << std::endl;
+        });
+    }
+}
+
+
+bool ChunkManager::isChunkInLoadDistance(const glm::ivec2& chunkPos, const glm::ivec2& centerChunk) {
+    glm::ivec2 diff = glm::abs(chunkPos - centerChunk);
+    return diff.x <= viewDistance && diff.y <= viewDistance;
+}
+
+float ChunkManager::calculateChunkPriority(const glm::ivec2& chunkPos, const glm::ivec2& playerChunk) {
+    return glm::length(glm::vec2(chunkPos) - glm::vec2(playerChunk));
 }
