@@ -4,13 +4,10 @@
 #include <glm/glm.hpp>
 #include <functional>
 
-namespace std {
-    template <>
-    struct hash<glm::ivec2> {
-        size_t operator()(const glm::ivec2& k) const {
-            return ((hash<int>()(k.x) ^ (hash<int>()(k.y) << 1)) >> 1);
-        }
-    };
-}
+struct IVec2Hash {
+    std::size_t operator()(const glm::ivec2& v) const {
+        return std::hash<int>()(v.x) ^ (std::hash<int>()(v.y) << 1);
+    }
+};
 
 #endif // HASH_H

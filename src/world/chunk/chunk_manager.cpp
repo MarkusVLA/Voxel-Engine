@@ -6,11 +6,6 @@ ChunkManager::ChunkManager(int chunkWidth, int chunkHeight, int chunkDepth, int 
     : chunkWidth(chunkWidth), chunkHeight(chunkHeight), chunkDepth(chunkDepth), viewDistance(viewDistance) {
 }
 
-void ChunkManager::updatePlayerPosition(const glm::vec3& playerPos) {
-    playerPosition = playerPos;
-    loadChunks();
-    unloadChunks();
-}
 
 glm::ivec2 ChunkManager::worldToChunkCoords(const glm::vec3& worldPos) {
     return glm::ivec2(
@@ -73,3 +68,62 @@ std::vector<unsigned int> ChunkManager::getIndexData() {
     }
     return indices;
 }
+
+const std::unordered_map<glm::ivec2, std::unique_ptr<Chunk>, IVec2Hash>& ChunkManager::getChunks() const {
+    return chunks;
+}
+
+
+void ChunkManager::updatePlayerPosition(const glm::vec3& playerPos) {
+    playerPosition = playerPos;
+    glm::ivec2 playerChunk = worldToChunkCoords(playerPosition);
+
+    newlyLoadedChunks.clear();
+    unloadedChunks.clear();
+
+    for (int x = -viewDistance; x <= viewDistance; ++x) {
+        for (int z = -viewDistance; z <= viewDistance; ++z) {
+            glm::ivec2 chunkPos = playerChunk + glm::ivec2(x, z);
+            if (chunks.find(chunkPos) == chunks.end()) {
+                chunks[chunkPos] = std::make_unique<Chunk>(chunkWidth, chunkHeight, chunkDepth, glm::vec2(chunkPos));
+                newlyLoadedChunks.push_back(chunkPos);
+            }
+        }
+    }
+
+    // Unload distant chunks
+    for (auto it = chunks.begin(); it != chunks.end(); ) {
+        glm::ivec2 chunkPos = it->first;
+        glm::ivec2 diff = glm::abs(chunkPos - playerChunk);
+        
+        if (diff.x > viewDistance || diff.y > viewDistance) {
+            unloadedChunks.push_back(chunkPos);
+            it = chunks.erase(it);
+        } else {
+            ++it;
+        }
+    }
+}
+
+std::vector<glm::ivec2> ChunkManager::getNewlyLoadedChunks() const {
+    return newlyLoadedChunks;
+}
+
+std::vector<glm::ivec2> ChunkManager::getUnloadedChunks() const {
+    return unloadedChunks;
+}
+
+void ChunkManager::clearChunkChanges() {
+    newlyLoadedChunks.clear();
+    unloadedChunks.clear();
+}
+
+std::unique_ptr<Chunk>& ChunkManager::getChunk(const glm::ivec2& chunkPos) {
+    auto it = chunks.find(chunkPos);
+    if (it != chunks.end()) {
+        return it->second;
+    }
+    static std::unique_ptr<Chunk> nullChunk;
+    return nullChunk;
+}
+

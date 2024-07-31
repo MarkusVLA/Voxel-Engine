@@ -2,20 +2,20 @@
 #include "texture_loader.h"
 #include <iostream>
 
-
 Renderer::Renderer() {
     initOpenGL();
     camera = nullptr;
     projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 500.0f); 
-    indicesSize = 0;
     objectShader = new Shader("../src/shaders/triangle.vert", "../src/shaders/triangle.frag");
     skyboxShader = new Shader("../src/shaders/skybox.vert", "../src/shaders/skybox.frag");
 }
 
 Renderer::~Renderer() {
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
-    glDeleteBuffers(1, &EBO);
+    for (auto& [chunkPos, mesh] : chunkMeshes) {
+        glDeleteVertexArrays(1, &mesh.VAO);
+        glDeleteBuffers(1, &mesh.VBO);
+        glDeleteBuffers(1, &mesh.EBO);
+    }
     glDeleteVertexArrays(1, &skyboxVAO);
     glDeleteBuffers(1, &skyboxVBO);
     delete objectShader;
@@ -26,65 +26,63 @@ void Renderer::initOpenGL() {
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
 
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glGenBuffers(1, &EBO);
-
-    glBindVertexArray(VAO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
-
-    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(5 * sizeof(float)));
-    glEnableVertexAttribArray(2);
-
-    glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(8 * sizeof(float)));
-    glEnableVertexAttribArray(3);
-
     glGenVertexArrays(1, &skyboxVAO);
     glGenBuffers(1, &skyboxVBO);
 }
 
+void Renderer::addChunk(const glm::ivec2& chunkPos, const std::vector<float>& vertices, const std::vector<unsigned int>& indices) {
+    ChunkMesh mesh;
+    glGenVertexArrays(1, &mesh.VAO);
+    glGenBuffers(1, &mesh.VBO);
+    glGenBuffers(1, &mesh.EBO);
 
+    glBindVertexArray(mesh.VAO);
 
-void Renderer::setMeshData(const std::vector<float>& vertices, const std::vector<unsigned int>& indices) {
-    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, mesh.VBO);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_STATIC_DRAW);
 
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_DYNAMIC_DRAW);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_DYNAMIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(5 * sizeof(float)));
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(8 * sizeof(float)));
+    glEnableVertexAttribArray(3);
 
-    indicesSize = indices.size();
+    glBindVertexArray(0);
+
+    mesh.indexCount = indices.size();
+    chunkMeshes[chunkPos] = mesh;
 }
 
-void Renderer::updateMeshData(const std::vector<float>& vertices, const std::vector<unsigned int>& indices) {
-    glBindVertexArray(VAO);
+void Renderer::updateChunk(const glm::ivec2& chunkPos, const std::vector<float>& vertices, const std::vector<unsigned int>& indices) {
+    auto it = chunkMeshes.find(chunkPos);
+    if (it != chunkMeshes.end()) {
+        glBindVertexArray(it->second.VAO);
 
-    if (!vertices.empty()) {
-        glBindBuffer(GL_ARRAY_BUFFER, VBO);
-        glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), nullptr, GL_DYNAMIC_DRAW);
-        glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_DYNAMIC_DRAW);
+        glBindBuffer(GL_ARRAY_BUFFER, it->second.VBO);
+        glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_STATIC_DRAW);
+
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, it->second.EBO);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_STATIC_DRAW);
+
+        it->second.indexCount = indices.size();
+    } else {
+        addChunk(chunkPos, vertices, indices);
     }
+}
 
-    if (!indices.empty()) {
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), nullptr, GL_DYNAMIC_DRAW);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int), indices.data(), GL_DYNAMIC_DRAW);
-    }
-
-    if (!indices.empty()) {
-        indicesSize = indices.size();
+void Renderer::removeChunk(const glm::ivec2& chunkPos) {
+    auto it = chunkMeshes.find(chunkPos);
+    if (it != chunkMeshes.end()) {
+        glDeleteVertexArrays(1, &it->second.VAO);
+        glDeleteBuffers(1, &it->second.VBO);
+        glDeleteBuffers(1, &it->second.EBO);
+        chunkMeshes.erase(it);
     }
 }
 
@@ -102,12 +100,10 @@ void Renderer::loadTexture(const std::string& path) {
     textureID = TextureLoader::loadTextureAtlas(path);
 }
 
-
-// renderer.cpp
-
 void Renderer::draw() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    // Draw skybox
     glDepthFunc(GL_LEQUAL);
     skyboxShader->use();
     if (camera) {
@@ -120,8 +116,8 @@ void Renderer::draw() {
     glBindVertexArray(0);
     glDepthFunc(GL_LESS);
 
+    // Draw chunks
     objectShader->use();
-    glBindVertexArray(VAO);
     if (camera) { 
         glm::mat4 view = camera->getViewMatrix();
         objectShader->setMat4("view", view);
@@ -132,13 +128,18 @@ void Renderer::draw() {
     objectShader->setVec3("fogColor", glm::vec3(0.7f, 0.7f, 0.7f));
     objectShader->setFloat("fogDensity", 0.001f); 
 
-    glDrawElements(GL_TRIANGLES, indicesSize, GL_UNSIGNED_INT, 0);
+    for (const auto& [chunkPos, mesh] : chunkMeshes) {
+        glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(chunkPos.x * 16, 0, chunkPos.y * 16));
+        objectShader->setMat4("model", model);
+
+        glBindVertexArray(mesh.VAO);
+        glDrawElements(GL_TRIANGLES, mesh.indexCount, GL_UNSIGNED_INT, 0);
+    }
 }
-
-
 
 void Renderer::setViewport(int width, int height) {
     glViewport(0, 0, width, height);
+    projection = glm::perspective(glm::radians(45.0f), static_cast<float>(width) / static_cast<float>(height), 0.1f, 500.0f);
 }
 
 void Renderer::setCamera(Camera* cam) {

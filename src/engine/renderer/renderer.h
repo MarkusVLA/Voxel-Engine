@@ -4,10 +4,13 @@
 #include <glad/glad.h>
 #include <string>
 #include <vector>
+#include <unordered_map>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include "../camera/camera.h"
 #include "shader.h"
+#include "../../utils/hash.h"
+
 
 class Renderer {
 public:
@@ -16,21 +19,25 @@ public:
     void draw();
     void setViewport(int width, int height);
     void setCamera(Camera* camera);
-    void setMeshData(const std::vector<float>& vertices, const std::vector<unsigned int>& indices);
     void setSkyboxData(const std::vector<float>& vertices);
     void loadTexture(const std::string& path);
-    void updateMeshData(const std::vector<float>& vertices, const std::vector<unsigned int>& indices);
+    void addChunk(const glm::ivec2& chunkPos, const std::vector<float>& vertices, const std::vector<unsigned int>& indices);
+    void updateChunk(const glm::ivec2& chunkPos, const std::vector<float>& vertices, const std::vector<unsigned int>& indices);
+    void removeChunk(const glm::ivec2& chunkPos);
 
 private:
-    unsigned int VAO, VBO, EBO;
+    struct ChunkMesh {
+        GLuint VAO, VBO, EBO;
+        size_t indexCount;
+    };
+
+    std::unordered_map<glm::ivec2, ChunkMesh, IVec2Hash> chunkMeshes; 
     unsigned int skyboxVAO, skyboxVBO;
-    unsigned int depthVAO, dpehtVBO;
     unsigned int textureID;
     Shader* objectShader;
     Shader* skyboxShader;
     Camera* camera;
     glm::mat4 projection;
-    size_t indicesSize;
     void initOpenGL();
 };
 
