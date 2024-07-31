@@ -1,21 +1,51 @@
 #include "chunk_manager.h"
 #include <iostream>
+#include <cmath>
 
-ChunkManager::ChunkManager(int chunkWidth, int chunkHeight, int chunkDepth, int worldWidth, int worldHeight)
-    : chunkWidth(chunkWidth), chunkHeight(chunkHeight), chunkDepth(chunkDepth), worldWidth(worldWidth), worldHeight(worldHeight) {
-    generateWorld();
+ChunkManager::ChunkManager(int chunkWidth, int chunkHeight, int chunkDepth, int viewDistance)
+    : chunkWidth(chunkWidth), chunkHeight(chunkHeight), chunkDepth(chunkDepth), viewDistance(viewDistance) {
 }
 
-ChunkManager::~ChunkManager() {
-    // Cleanup if necessary
+void ChunkManager::updatePlayerPosition(const glm::vec3& playerPos) {
+    playerPosition = playerPos;
+    loadChunks();
+    unloadChunks();
 }
 
-void ChunkManager::generateWorld() {
-    for (int x = 0; x < worldWidth; ++x) {
-        for (int z = 0; z < worldHeight; ++z) {
-            glm::ivec2 chunkIndex = glm::ivec2(x, z);
-            chunks.emplace(chunkIndex, Chunk(chunkWidth, chunkHeight, chunkDepth, glm::vec2(chunkIndex)));
-            std::cout << "Loaded chunk at: " << chunkIndex.x << ", " << chunkIndex.y << std::endl;
+glm::ivec2 ChunkManager::worldToChunkCoords(const glm::vec3& worldPos) {
+    return glm::ivec2(
+        static_cast<int>(std::floor(worldPos.x / chunkWidth)),
+        static_cast<int>(std::floor(worldPos.z / chunkDepth))
+    );
+}
+
+void ChunkManager::loadChunks() {
+    glm::ivec2 playerChunk = worldToChunkCoords(playerPosition);
+    
+    for (int x = -viewDistance; x <= viewDistance; ++x) {
+        for (int z = -viewDistance; z <= viewDistance; ++z) {
+            glm::ivec2 chunkPos = playerChunk + glm::ivec2(x, z);
+            
+            if (chunks.find(chunkPos) == chunks.end()) {
+                chunks[chunkPos] = std::make_unique<Chunk>(chunkWidth, chunkHeight, chunkDepth, glm::vec2(chunkPos));
+                std::cout << "Loaded chunk at: " << chunkPos.x << ", " << chunkPos.y << std::endl;
+            }
+        }
+    }
+}
+
+void ChunkManager::unloadChunks() {
+    glm::ivec2 playerChunk = worldToChunkCoords(playerPosition);
+    
+    for (auto it = chunks.begin(); it != chunks.end(); ) {
+        glm::ivec2 chunkPos = it->first;
+        glm::ivec2 diff = glm::abs(chunkPos - playerChunk);
+        
+        if (diff.x > viewDistance || diff.y > viewDistance) {
+            std::cout << "Unloaded chunk at: " << chunkPos.x << ", " << chunkPos.y << std::endl;
+            it = chunks.erase(it);
+        } else {
+            ++it;
         }
     }
 }
@@ -24,7 +54,7 @@ std::vector<float> ChunkManager::getVertexData() {
     std::vector<float> vertices;
     for (const auto& pair : chunks) {
         const auto& chunk = pair.second;
-        std::vector<float> chunkVertices = chunk.getVertexData();
+        std::vector<float> chunkVertices = chunk->getVertexData();
         vertices.insert(vertices.end(), chunkVertices.begin(), chunkVertices.end());
     }
     return vertices;
@@ -35,11 +65,11 @@ std::vector<unsigned int> ChunkManager::getIndexData() {
     unsigned int baseIndex = 0;
     for (const auto& pair : chunks) {
         const auto& chunk = pair.second;
-        std::vector<unsigned int> chunkIndices = chunk.getIndexData();
+        std::vector<unsigned int> chunkIndices = chunk->getIndexData();
         for (unsigned int index : chunkIndices) {
             indices.push_back(index + baseIndex);
         }
-        baseIndex += chunk.getVertexData().size() / 9; // Update based on the vertex size (now 9 floats per vertex)
+        baseIndex += chunk->getVertexData().size() / 9;
     }
     return indices;
 }

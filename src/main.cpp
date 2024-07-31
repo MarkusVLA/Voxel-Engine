@@ -17,7 +17,9 @@ int main() {
 
     int worldWidth = 24;
     int worldHeight = 24; 
-    ChunkManager chunkManager(16, 256, 16, worldWidth, worldHeight);
+    ChunkManager chunkManager(16, 256, 16, 2);
+    chunkManager.updatePlayerPosition(glm::vec3(200,0,200));
+
 
     Renderer renderer;
     renderer.setCamera(&camera);
