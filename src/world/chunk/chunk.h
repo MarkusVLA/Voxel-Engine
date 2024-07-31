@@ -30,8 +30,8 @@ private:
 
     void generateTerrain();
     int generateHeight(int x, int z) const;
-
-
+    uint8_t getFaceFlags(glm::vec3 pos) const;
+    
     int width, height, depth;
     glm::vec2 index_;
     std::vector<Voxel*> voxels;

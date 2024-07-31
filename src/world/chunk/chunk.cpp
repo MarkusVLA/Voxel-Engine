@@ -44,14 +44,7 @@ std::vector<float> Chunk::getVertexData() const {
                 glm::vec3 pos(x, y, z);
                 Voxel* voxel = getVoxel(pos);
                 if (voxel != nullptr) {
-                    uint8_t faceFlags = 0;
-                    faceFlags |= (z == depth - 1 || getVoxel({x, y, z + 1}) == nullptr) ? FACE_FRONT : 0;
-                    faceFlags |= (z == 0 || getVoxel({x, y, z - 1}) == nullptr) ? FACE_BACK : 0;
-                    faceFlags |= (x == 0 || getVoxel({x - 1, y, z}) == nullptr) ? FACE_LEFT : 0;
-                    faceFlags |= (x == width - 1 || getVoxel({x + 1, y, z}) == nullptr) ? FACE_RIGHT : 0;
-                    faceFlags |= (y == height - 1 || getVoxel({x, y + 1, z}) == nullptr) ? FACE_TOP : 0;
-                    faceFlags |= (y == 0 || getVoxel({x, y - 1, z}) == nullptr) ? FACE_BOTTOM : 0;
-
+                    uint8_t faceFlags = getFaceFlags(glm::vec3(x,y,z));
                     std::vector<float> voxelVertices = voxel->getVertexData(offset, faceFlags);
                     vertices.insert(vertices.end(), voxelVertices.begin(), voxelVertices.end());
                 }
@@ -72,14 +65,7 @@ std::vector<unsigned int> Chunk::getIndexData() const {
                 Voxel* voxel = getVoxel(pos);
                 if (voxel != nullptr) {
                     // Check which faces need to be drawn
-                    uint8_t faceFlags = 0;
-                    faceFlags |= (z == depth - 1 || getVoxel({x, y, z + 1}) == nullptr) ? FACE_FRONT : 0;
-                    faceFlags |= (z == 0 || getVoxel({x, y, z - 1}) == nullptr) ? FACE_BACK : 0;
-                    faceFlags |= (x == 0 || getVoxel({x - 1, y, z}) == nullptr) ? FACE_LEFT : 0;
-                    faceFlags |= (x == width - 1 || getVoxel({x + 1, y, z}) == nullptr) ? FACE_RIGHT : 0;
-                    faceFlags |= (y == height - 1 || getVoxel({x, y + 1, z}) == nullptr) ? FACE_TOP : 0;
-                    faceFlags |= (y == 0 || getVoxel({x, y - 1, z}) == nullptr) ? FACE_BOTTOM : 0;
-
+                    uint8_t faceFlags = getFaceFlags(glm::vec3(x,y,z));
                     std::vector<unsigned int> voxelIndices = voxel->getIndexData(baseIndex, faceFlags);
                     indices.insert(indices.end(), voxelIndices.begin(), voxelIndices.end());
                     baseIndex += __builtin_popcount(faceFlags) * 4; // 4 vertices per face
@@ -90,6 +76,16 @@ std::vector<unsigned int> Chunk::getIndexData() const {
     return indices;
 }
 
+uint8_t Chunk::getFaceFlags(glm::vec3 pos) const {
+    uint8_t flags = 0B00000000;
+    flags |= (pos.z == depth - 1 || getVoxel({pos.x, pos.y, pos.z + 1}) == nullptr) ? FACE_FRONT : 0;
+    flags |= (pos.z == 0 || getVoxel({pos.x, pos.y, pos.z - 1}) == nullptr) ? FACE_BACK : 0;
+    flags |= (pos.x == 0 || getVoxel({pos.x - 1, pos.y, pos.z}) == nullptr) ? FACE_LEFT : 0;
+    flags |= (pos.x == width - 1 || getVoxel({pos.x + 1, pos.y, pos.z}) == nullptr) ? FACE_RIGHT : 0;
+    flags |= (pos.y == height - 1 || getVoxel({pos.x, pos.y + 1, pos.z}) == nullptr) ? FACE_TOP : 0;
+    flags |= (pos.y == 0 || getVoxel({pos.x, pos.y - 1, pos.z}) == nullptr) ? FACE_BOTTOM : 0;
+    return flags;
+}
 
 Voxel* Chunk::getVoxel(const glm::vec3& pos) const {
     unsigned int index = coordsToIndex(pos);

@@ -130,7 +130,7 @@ void Renderer::draw() {
     glBindTexture(GL_TEXTURE_2D, textureID);
 
     objectShader->setVec3("fogColor", glm::vec3(0.7f, 0.7f, 0.7f));
-    objectShader->setFloat("fogDensity", 0.001f); // Lower the fog density for a subtler effect
+    objectShader->setFloat("fogDensity", 0.001f); 
 
     glDrawElements(GL_TRIANGLES, indicesSize, GL_UNSIGNED_INT, 0);
 }
