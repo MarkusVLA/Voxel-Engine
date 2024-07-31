@@ -8,9 +8,10 @@ enum VoxelType{
     GRASS = 0, 
     STONE = 1,
     DIRT = 3,
-    WOOD = 4,
     BRICK = 7,
-    COBBLESTONE = 16
+    COBBLESTONE = 16,
+    IRONORE = 33,
+    GRAVE = 19
 
 };
 

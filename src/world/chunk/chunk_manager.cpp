@@ -7,7 +7,7 @@
 ChunkManager::ChunkManager(int chunkWidth, int chunkHeight, int chunkDepth, int viewDistance)
     : chunkWidth(chunkWidth), chunkHeight(chunkHeight), chunkDepth(chunkDepth), viewDistance(viewDistance), 
       running(true), lastLoadedCenterChunk(0, 0) {
-    startWorkers(2); 
+    startWorkers(8); 
 }
 
 ChunkManager::~ChunkManager() {

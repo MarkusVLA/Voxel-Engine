@@ -10,7 +10,6 @@
 
 int main() {
     try {
-        // Create window (This also initializes GLFW, creates OpenGL context, and initializes GLAD)
         Window window(1920, 1200, "OpenGL Window");
 
         Camera camera(glm::vec3(0.0f, 128.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, 0.0f);
@@ -18,9 +17,9 @@ int main() {
 
         SkyBox skyBox;
 
-        int chunkWidth = 16;
+        int chunkWidth = 32;
         int chunkHeight = 256;
-        int chunkDepth = 16;
+        int chunkDepth = 32;
         int viewDistance = 10;
         ChunkManager chunkManager(chunkWidth, chunkHeight, chunkDepth, viewDistance);
         chunkManager.updatePlayerPosition(camera.getPosition());
@@ -39,9 +38,6 @@ int main() {
             lastFrame = currentFrame;
 
             window.pollEvents();
-
-            // Update camera based on input (you need to implement this)
-            // InputListener::updateCamera(deltaTime);
 
             glm::vec3 cameraPos = camera.getPosition();
             chunkManager.updatePlayerPosition(cameraPos);
