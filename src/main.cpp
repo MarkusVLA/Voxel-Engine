@@ -23,7 +23,7 @@ int main() {
     int chunkWidth = 16;
     int chunkHeight = 256;
     int chunkDepth = 16;
-    int viewDistance = 1;
+    int viewDistance = 5;
     ChunkManager chunkManager(chunkWidth, chunkHeight, chunkDepth, viewDistance);
 
     // Set up renderer
@@ -33,13 +33,8 @@ int main() {
     renderer.loadTexture("../assets/textures/atlas.png");
     renderer.setSkyboxData(skyBox.GetVertices());
 
+    // Initial chunk load based on the initial camera position
     chunkManager.updatePlayerPosition(camera.getPosition());
-    for (const auto& chunk : chunkManager.getChunks()) {
-        glm::ivec2 chunkPos = chunk.first;
-        std::vector<float> vertices = chunk.second->getVertexData();
-        std::vector<unsigned int> indices = chunk.second->getIndexData();
-        renderer.addChunk(chunkPos, vertices, indices);
-    }
 
     // Main loop
     while (!window.shouldClose()) {
@@ -58,7 +53,6 @@ int main() {
             }
         }
 
-        // Handle unloaded chunks
         for (const auto& chunkPos : chunkManager.getUnloadedChunks()) {
             renderer.removeChunk(chunkPos);
         }

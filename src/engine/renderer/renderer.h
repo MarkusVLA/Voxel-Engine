@@ -9,7 +9,6 @@
 #include <queue>
 #include <mutex>
 #include <condition_variable>
-#include <thread>
 #include <atomic>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
