@@ -2,10 +2,11 @@
 #include "texture_loader.h"
 #include <iostream>
 
+
 Renderer::Renderer() {
     initOpenGL();
     camera = nullptr;
-    projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 1000.0f);
+    projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 500.0f); 
     indicesSize = 0;
     objectShader = new Shader("../src/shaders/triangle.vert", "../src/shaders/triangle.frag");
     skyboxShader = new Shader("../src/shaders/skybox.vert", "../src/shaders/skybox.frag");
@@ -101,6 +102,9 @@ void Renderer::loadTexture(const std::string& path) {
     textureID = TextureLoader::loadTextureAtlas(path);
 }
 
+
+// renderer.cpp
+
 void Renderer::draw() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -118,14 +122,20 @@ void Renderer::draw() {
 
     objectShader->use();
     glBindVertexArray(VAO);
-    if (camera) {
+    if (camera) { 
         glm::mat4 view = camera->getViewMatrix();
         objectShader->setMat4("view", view);
         objectShader->setMat4("projection", projection);
     }
     glBindTexture(GL_TEXTURE_2D, textureID);
+
+    objectShader->setVec3("fogColor", glm::vec3(0.7f, 0.7f, 0.7f));
+    objectShader->setFloat("fogDensity", 0.001f); // Lower the fog density for a subtler effect
+
     glDrawElements(GL_TRIANGLES, indicesSize, GL_UNSIGNED_INT, 0);
 }
+
+
 
 void Renderer::setViewport(int width, int height) {
     glViewport(0, 0, width, height);

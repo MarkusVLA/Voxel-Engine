@@ -3,7 +3,8 @@
 
 
 enum VoxelType{
-
+    
+    AIR = 255,
     GRASS = 0, 
     STONE = 1,
     DIRT = 3,

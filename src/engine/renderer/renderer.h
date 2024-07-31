@@ -24,6 +24,7 @@ public:
 private:
     unsigned int VAO, VBO, EBO;
     unsigned int skyboxVAO, skyboxVBO;
+    unsigned int depthVAO, dpehtVBO;
     unsigned int textureID;
     Shader* objectShader;
     Shader* skyboxShader;

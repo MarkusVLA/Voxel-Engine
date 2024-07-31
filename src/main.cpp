@@ -5,19 +5,19 @@
 #include "engine/input_listener/input_listener.h"
 #include "engine/camera/camera.h"
 #include "world/skybox.h"
-#include "world/chunk_manager.h"
-
+#include "world/chunk/chunk_manager.h"
+ 
 int main() {
-    Window window(1200, 1000, "OpenGL Window");
+    Window window(1920, 1200, "OpenGL Window");
 
     Camera camera(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, 0.0f);
     InputListener::setCamera(&camera);
 
     SkyBox skyBox;
 
-    int worldWidth = 8;
-    int worldHeight = 8; 
-    ChunkManager chunkManager(16, 32, 16, worldWidth, worldHeight);
+    int worldWidth = 6;
+    int worldHeight = 6; 
+    ChunkManager chunkManager(16, 64, 16, worldWidth, worldHeight);
 
     Renderer renderer;
     renderer.setCamera(&camera);

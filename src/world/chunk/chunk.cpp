@@ -1,6 +1,7 @@
 #include "chunk.h"
 #include <cstdlib>
 #include <ctime>
+#include <iostream>
 
 Chunk::Chunk(int width, int height, int depth, glm::vec2 index)
     : width(width), height(height), depth(depth), index_(index), perlinNoise() {
@@ -9,6 +10,11 @@ Chunk::Chunk(int width, int height, int depth, glm::vec2 index)
 }
 
 void Chunk::generateTerrain() {
+
+    // Reserve space for all chunk voxels
+    voxels.reserve(width * height * depth);
+    
+
     for (int x = 0; x < width; ++x) {
         for (int z = 0; z < depth; ++z) {
             int y = generateHeight(x, z);
@@ -23,6 +29,8 @@ void Chunk::generateTerrain() {
         }
     }
 }
+
+
 
 int Chunk::generateHeight(int x, int z) const {
     float scale = 0.02f; 
@@ -51,7 +59,6 @@ std::vector<unsigned int> Chunk::getIndexData() const {
         indices.insert(indices.end(), voxelIndices.begin(), voxelIndices.end());
         baseIndex += 24;
     }
-
     return indices;
 }
 
@@ -61,6 +68,23 @@ std::vector<float> Chunk::getMesh() const {
     std::vector<unsigned int> indices = getIndexData();
     mesh.insert(mesh.end(), indices.begin(), indices.end());
     return mesh;
+}
+
+
+glm::vec3 Chunk::indexToCoords(int index) const {
+    return glm::vec3(
+        static_cast<float>(index % 16),
+        static_cast<float>(index / (16 * 16)),
+        static_cast<float>((index / 16) % 16)
+    );
+}
+
+unsigned int Chunk::coordsToIndex(const glm::vec3 coords) const {
+    return static_cast<int>(
+        coords.x + 
+        coords.y * 16 * 16 + 
+        coords.z * 16
+    );
 }
 
 glm::vec2 Chunk::getIndex() const {

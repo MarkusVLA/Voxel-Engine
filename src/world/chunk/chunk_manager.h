@@ -5,7 +5,7 @@
 #include <vector>
 #include <glm/glm.hpp>
 #include "chunk.h"
-#include "../utils/hash.h"  // Ensure this is included
+#include "../../utils/hash.h"
 
 class ChunkManager {
 public:

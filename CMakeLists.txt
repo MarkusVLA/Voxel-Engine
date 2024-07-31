@@ -1,13 +1,12 @@
 cmake_minimum_required(VERSION 3.2)
 project(OpenGL)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 
 find_package(OpenGL REQUIRED)
 add_subdirectory(libs/glfw)
 add_subdirectory(libs/glm)
 add_subdirectory(libs/freetype)
-
 
 add_library(glad STATIC libs/glad/src/glad.c)
 target_include_directories(glad PRIVATE libs/glad/include)
@@ -28,9 +27,9 @@ add_executable(app
     src/engine/input_listener/input_listener.cpp
     src/engine/camera/camera.cpp
     src/world/voxel/voxel.cpp
-    src/world/chunk.cpp
+    src/world/chunk/chunk.cpp
     src/world/skybox.cpp
-    src/world/chunk_manager.cpp
+    src/world/chunk/chunk_manager.cpp
     src/utils/perlin.cpp
 
 )
