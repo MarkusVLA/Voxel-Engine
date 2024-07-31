@@ -2,12 +2,11 @@
 #include "texture_loader.h"
 #include <iostream>
 
-Renderer::Renderer() {
+Renderer::Renderer() 
+    : shouldExit(false), textureLoaded(false), objectShader(nullptr), skyboxShader(nullptr) {
     initOpenGL();
     camera = nullptr;
-    projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 500.0f); 
-    objectShader = new Shader("../src/shaders/triangle.vert", "../src/shaders/triangle.frag");
-    skyboxShader = new Shader("../src/shaders/skybox.vert", "../src/shaders/skybox.frag");
+    projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 500.0f);
 }
 
 Renderer::~Renderer() {
@@ -28,9 +27,63 @@ void Renderer::initOpenGL() {
 
     glGenVertexArrays(1, &skyboxVAO);
     glGenBuffers(1, &skyboxVBO);
+
+    GLenum err = glGetError();
+    if (err != GL_NO_ERROR) {
+        std::cerr << "OpenGL error after initialization: " << err << std::endl;
+    }
+}
+
+void Renderer::initShaders() {
+    try {
+        objectShader = new Shader("../src/shaders/triangle.vert", "../src/shaders/triangle.frag");
+        skyboxShader = new Shader("../src/shaders/skybox.vert", "../src/shaders/skybox.frag");
+    } catch (const std::exception& e) {
+        std::cerr << "Shader compilation failed: " << e.what() << std::endl;
+        throw;
+    }
 }
 
 void Renderer::addChunk(const glm::ivec2& chunkPos, const std::vector<float>& vertices, const std::vector<unsigned int>& indices) {
+    std::unique_lock<std::mutex> lock(queueMutex);
+    chunkUpdateQueue.push(ChunkUpdate{ChunkUpdateType::Add, chunkPos, vertices, indices});
+}
+
+void Renderer::updateChunk(const glm::ivec2& chunkPos, const std::vector<float>& vertices, const std::vector<unsigned int>& indices) {
+    std::unique_lock<std::mutex> lock(queueMutex);
+    chunkUpdateQueue.push(ChunkUpdate{ChunkUpdateType::Update, chunkPos, vertices, indices});
+}
+
+void Renderer::removeChunk(const glm::ivec2& chunkPos) {
+    std::unique_lock<std::mutex> lock(queueMutex);
+    chunkUpdateQueue.push(ChunkUpdate{ChunkUpdateType::Remove, chunkPos, {}, {}});
+}
+
+void Renderer::processChunkUpdates() {
+    std::queue<ChunkUpdate> updates;
+    {
+        std::unique_lock<std::mutex> lock(queueMutex);
+        std::swap(updates, chunkUpdateQueue);
+    }
+
+    while (!updates.empty()) {
+        const auto& update = updates.front();
+        switch (update.type) {
+            case ChunkUpdateType::Add:
+                addChunkImpl(update.chunkPos, update.vertices, update.indices);
+                break;
+            case ChunkUpdateType::Update:
+                updateChunkImpl(update.chunkPos, update.vertices, update.indices);
+                break;
+            case ChunkUpdateType::Remove:
+                removeChunkImpl(update.chunkPos);
+                break;
+        }
+        updates.pop();
+    }
+}
+
+void Renderer::addChunkImpl(const glm::ivec2& chunkPos, const std::vector<float>& vertices, const std::vector<unsigned int>& indices) {
     ChunkMesh mesh;
     glGenVertexArrays(1, &mesh.VAO);
     glGenBuffers(1, &mesh.VBO);
@@ -56,10 +109,13 @@ void Renderer::addChunk(const glm::ivec2& chunkPos, const std::vector<float>& ve
     glBindVertexArray(0);
 
     mesh.indexCount = indices.size();
+    
+    std::unique_lock<std::mutex> lock(chunkMutex);
     chunkMeshes[chunkPos] = mesh;
 }
 
-void Renderer::updateChunk(const glm::ivec2& chunkPos, const std::vector<float>& vertices, const std::vector<unsigned int>& indices) {
+void Renderer::updateChunkImpl(const glm::ivec2& chunkPos, const std::vector<float>& vertices, const std::vector<unsigned int>& indices) {
+    std::unique_lock<std::mutex> lock(chunkMutex);
     auto it = chunkMeshes.find(chunkPos);
     if (it != chunkMeshes.end()) {
         glBindVertexArray(it->second.VAO);
@@ -72,11 +128,13 @@ void Renderer::updateChunk(const glm::ivec2& chunkPos, const std::vector<float>&
 
         it->second.indexCount = indices.size();
     } else {
-        addChunk(chunkPos, vertices, indices);
+        lock.unlock();
+        addChunkImpl(chunkPos, vertices, indices);
     }
 }
 
-void Renderer::removeChunk(const glm::ivec2& chunkPos) {
+void Renderer::removeChunkImpl(const glm::ivec2& chunkPos) {
+    std::unique_lock<std::mutex> lock(chunkMutex);
     auto it = chunkMeshes.find(chunkPos);
     if (it != chunkMeshes.end()) {
         glDeleteVertexArrays(1, &it->second.VAO);
@@ -97,7 +155,9 @@ void Renderer::setSkyboxData(const std::vector<float>& vertices) {
 }
 
 void Renderer::loadTexture(const std::string& path) {
+    std::unique_lock<std::mutex> lock(textureMutex);
     textureID = TextureLoader::loadTextureAtlas(path);
+    textureLoaded = true;
 }
 
 void Renderer::draw() {
@@ -105,35 +165,40 @@ void Renderer::draw() {
 
     // Draw skybox
     glDepthFunc(GL_LEQUAL);
-    skyboxShader->use();
-    if (camera) {
-        glm::mat4 view = glm::mat4(glm::mat3(camera->getViewMatrix()));
-        skyboxShader->setMat4("view", view);
-        skyboxShader->setMat4("projection", projection);
+    if (skyboxShader) {
+        skyboxShader->use();
+        if (camera) {
+            glm::mat4 view = glm::mat4(glm::mat3(camera->getViewMatrix()));
+            skyboxShader->setMat4("view", view);
+            skyboxShader->setMat4("projection", projection);
+        }
+        glBindVertexArray(skyboxVAO);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+        glBindVertexArray(0);
     }
-    glBindVertexArray(skyboxVAO);
-    glDrawArrays(GL_TRIANGLES, 0, 36);
-    glBindVertexArray(0);
     glDepthFunc(GL_LESS);
 
     // Draw chunks
-    objectShader->use();
-    if (camera) { 
-        glm::mat4 view = camera->getViewMatrix();
-        objectShader->setMat4("view", view);
-        objectShader->setMat4("projection", projection);
-    }
-    glBindTexture(GL_TEXTURE_2D, textureID);
+    if (objectShader && textureLoaded) {
+        objectShader->use();
+        if (camera) { 
+            glm::mat4 view = camera->getViewMatrix();
+            objectShader->setMat4("view", view);
+            objectShader->setMat4("projection", projection);
+        }
+        glBindTexture(GL_TEXTURE_2D, textureID);
 
-    objectShader->setVec3("fogColor", glm::vec3(0.7f, 0.7f, 0.7f));
-    objectShader->setFloat("fogDensity", 0.001f); 
+        objectShader->setVec3("fogColor", glm::vec3(0.7f, 0.7f, 0.7f));
+        objectShader->setFloat("fogDensity", 0.001f); 
 
-    for (const auto& [chunkPos, mesh] : chunkMeshes) {
-        glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(chunkPos.x * 16, 0, chunkPos.y * 16));
-        objectShader->setMat4("model", model);
+        std::unique_lock<std::mutex> lock(chunkMutex);
+        for (const auto& [chunkPos, mesh] : chunkMeshes) {
+            glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(chunkPos.x * 16, 0, chunkPos.y * 16));
+            objectShader->setMat4("model", model);
 
-        glBindVertexArray(mesh.VAO);
-        glDrawElements(GL_TRIANGLES, mesh.indexCount, GL_UNSIGNED_INT, 0);
+            glBindVertexArray(mesh.VAO);
+            glDrawElements(GL_TRIANGLES, mesh.indexCount, GL_UNSIGNED_INT, 0);
+        }
     }
 }
 

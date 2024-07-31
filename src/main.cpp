@@ -6,22 +6,30 @@
 #include "engine/camera/camera.h"
 #include "world/skybox.h"
 #include "world/chunk/chunk_manager.h"
+#include <iostream>
 
 int main() {
+    // Create window (This also initializes GLFW, creates OpenGL context, and initializes GLAD)
     Window window(1920, 1200, "OpenGL Window");
-    Camera camera(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f, 128.0f, 0.0f), -90.0f, 0.0f);
+
+    // Set up camera
+    Camera camera(glm::vec3(0.0f, 128.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, 0.0f);
     InputListener::setCamera(&camera);
+
+    // Set up skybox
     SkyBox skyBox;
 
+    // Set up chunk manager
     int chunkWidth = 16;
     int chunkHeight = 256;
     int chunkDepth = 16;
-    int viewDistance = 4;
-
+    int viewDistance = 1;
     ChunkManager chunkManager(chunkWidth, chunkHeight, chunkDepth, viewDistance);
 
+    // Set up renderer
     Renderer renderer;
     renderer.setCamera(&camera);
+    renderer.initShaders();  
     renderer.loadTexture("../assets/textures/atlas.png");
     renderer.setSkyboxData(skyBox.GetVertices());
 
@@ -33,9 +41,14 @@ int main() {
         renderer.addChunk(chunkPos, vertices, indices);
     }
 
+    // Main loop
     while (!window.shouldClose()) {
         window.pollEvents();
+
+        // Update chunk loading based on camera position
         chunkManager.updatePlayerPosition(camera.getPosition());
+
+        // Handle newly loaded chunks
         for (const auto& chunkPos : chunkManager.getNewlyLoadedChunks()) {
             const auto& chunk = chunkManager.getChunk(chunkPos);
             if (chunk) {
@@ -44,12 +57,18 @@ int main() {
                 renderer.addChunk(chunkPos, vertices, indices);
             }
         }
+
+        // Handle unloaded chunks
         for (const auto& chunkPos : chunkManager.getUnloadedChunks()) {
             renderer.removeChunk(chunkPos);
         }
 
         chunkManager.clearChunkChanges();
+
+        // Process chunk updates and draw
+        renderer.processChunkUpdates();
         renderer.draw();
+
         window.swapBuffers();
     }
 

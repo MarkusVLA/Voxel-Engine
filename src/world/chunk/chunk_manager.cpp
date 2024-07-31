@@ -1,3 +1,4 @@
+
 #include "chunk_manager.h"
 #include <iostream>
 #include <cmath>
@@ -5,7 +6,6 @@
 ChunkManager::ChunkManager(int chunkWidth, int chunkHeight, int chunkDepth, int viewDistance)
     : chunkWidth(chunkWidth), chunkHeight(chunkHeight), chunkDepth(chunkDepth), viewDistance(viewDistance) {
 }
-
 
 glm::ivec2 ChunkManager::worldToChunkCoords(const glm::vec3& worldPos) {
     return glm::ivec2(
@@ -73,7 +73,6 @@ const std::unordered_map<glm::ivec2, std::unique_ptr<Chunk>, IVec2Hash>& ChunkMa
     return chunks;
 }
 
-
 void ChunkManager::updatePlayerPosition(const glm::vec3& playerPos) {
     playerPosition = playerPos;
     glm::ivec2 playerChunk = worldToChunkCoords(playerPosition);
@@ -126,4 +125,3 @@ std::unique_ptr<Chunk>& ChunkManager::getChunk(const glm::ivec2& chunkPos) {
     static std::unique_ptr<Chunk> nullChunk;
     return nullChunk;
 }
-

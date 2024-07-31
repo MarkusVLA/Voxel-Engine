@@ -13,17 +13,14 @@ public:
     void updatePlayerPosition(const glm::vec3& playerPos);
     std::vector<float> getVertexData();
     std::vector<unsigned int> getIndexData();
-
     const std::unordered_map<glm::ivec2, std::unique_ptr<Chunk>, IVec2Hash>& getChunks() const;
-
     std::vector<glm::ivec2> getNewlyLoadedChunks() const;
     std::vector<glm::ivec2> getUnloadedChunks() const;
     void clearChunkChanges();
     std::unique_ptr<Chunk>& getChunk(const glm::ivec2& chunkPos);
 
-
 private:
-    int chunkWidth, chunkHeight, chunkDepth;    
+    int chunkWidth, chunkHeight, chunkDepth;
     int viewDistance;
     glm::vec3 playerPosition;
     std::unordered_map<glm::ivec2, std::unique_ptr<Chunk>, IVec2Hash> chunks;
