@@ -10,5 +10,5 @@ void main()
 {
     TexCoords = aPos;
     vec4 pos = projection * view * vec4(aPos, 1.0);
-    gl_Position = pos.xyww; // Keep the depth value as 1.0
+    gl_Position = pos.xyww;
 }

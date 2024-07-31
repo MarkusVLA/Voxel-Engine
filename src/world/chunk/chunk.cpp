@@ -31,7 +31,11 @@ int Chunk::generateHeight(int x, int z) const {
     float scale = 0.02f; 
     float globalX = (x + index_.x * width) * scale;
     float globalZ = (z + index_.y * depth) * scale;
-    return static_cast<int>(perlinNoise.noise(globalX, globalZ) * 15 + 10);
+
+    float baseHeight = 64.0f;
+    float heightVariation = 32.0f;
+
+    return static_cast<int>(perlinNoise.noise(globalX, globalZ) * heightVariation + baseHeight);
 }
 
 std::vector<float> Chunk::getVertexData() const {

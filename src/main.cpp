@@ -15,9 +15,9 @@ int main() {
 
     SkyBox skyBox;
 
-    int worldWidth = 8;
-    int worldHeight = 8; 
-    ChunkManager chunkManager(16, 64, 16, worldWidth, worldHeight);
+    int worldWidth = 24;
+    int worldHeight = 24; 
+    ChunkManager chunkManager(16, 256, 16, worldWidth, worldHeight);
 
     Renderer renderer;
     renderer.setCamera(&camera);
