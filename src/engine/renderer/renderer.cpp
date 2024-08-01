@@ -24,7 +24,7 @@ Renderer::~Renderer() {
 void Renderer::initOpenGL() {
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
-
+    glfwSwapInterval(0);
     glGenVertexArrays(1, &skyboxVAO);
     glGenBuffers(1, &skyboxVBO);
 
