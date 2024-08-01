@@ -18,7 +18,7 @@ int main() {
         int chunkWidth = 16;
         int chunkHeight = 256;
         int chunkDepth = 16;
-        int viewDistance = 12;
+        int viewDistance = 18;
         ChunkManager chunkManager(chunkWidth, chunkHeight, chunkDepth, viewDistance);
         chunkManager.updatePlayerPosition(camera.getPosition());
         Renderer renderer;

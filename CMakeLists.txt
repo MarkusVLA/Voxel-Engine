@@ -21,7 +21,6 @@ add_subdirectory(libs/freetype)
 add_library(glad STATIC libs/glad/src/glad.c)
 target_include_directories(glad PRIVATE libs/glad/include)
 
-# ImGui configuration
 set(IMGUI_SOURCES
     libs/imgui/imgui.cpp
     libs/imgui/imgui_demo.cpp
