@@ -8,5 +8,8 @@
 	path = libs/stb
 	url = git@github.com:nothings/stb.git
 [submodule "libs/freetype"]
-	path = libs/freetype
+	path = libs/freety pe
 	url = https://github.com/freetype/freetype.git
+[submodule "libs/imgui"]
+	path = libs/imgui
+	url = git@github.com:ocornut/imgui.git
