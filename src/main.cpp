@@ -16,9 +16,9 @@ int main() {
         InputListener::setCamera(&camera);
         SkyBox skyBox;
         int chunkWidth = 16;
-        int chunkHeight = 256;
+        int chunkHeight = 128;
         int chunkDepth = 16;
-        int viewDistance = 18;
+        int viewDistance = 14;
         ChunkManager chunkManager(chunkWidth, chunkHeight, chunkDepth, viewDistance);
         chunkManager.updatePlayerPosition(camera.getPosition());
         Renderer renderer;

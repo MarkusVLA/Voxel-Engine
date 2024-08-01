@@ -6,6 +6,8 @@
 #include "../voxel/voxel.h"
 #include "../voxel/types.h"
 #include "../../utils/perlin.h"
+#include "../../utils/pop_count.h"
+
 
 class Chunk {
 public:

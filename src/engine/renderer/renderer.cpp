@@ -188,9 +188,15 @@ void Renderer::draw() {
         }
         glBindTexture(GL_TEXTURE_2D, textureID);
 
+         glm::vec3 lightDir = glm::normalize(glm::vec3(0.8f, 1.0f, 0.9f));
+        objectShader->setVec3("lightDir", lightDir);
+        objectShader->setVec3("lightColor", glm::vec3(1.0f, 1.0f, 0.9f)); // Slightly warm light
+        objectShader->setFloat("ambientStrength", 0.2f);
+
+        // Set fog uniforms (keeping your original values)
         objectShader->setVec3("fogColor", glm::vec3(0.7f, 0.7f, 0.7f));
         objectShader->setFloat("fogDensity", 0.001f); 
-
+        
         std::unique_lock<std::mutex> lock(chunkMutex);
         for (const auto& [chunkPos, mesh] : chunkMeshes) {
             glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(chunkPos.x * 16, 0, chunkPos.y * 16));

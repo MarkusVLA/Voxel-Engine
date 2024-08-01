@@ -127,7 +127,7 @@ std::vector<unsigned int> Chunk::getIndexData() const {
                     uint8_t faceFlags = getFaceFlags(glm::vec3(x,y,z));
                     std::vector<unsigned int> voxelIndices = voxel->getIndexData(baseIndex, faceFlags);
                     indices.insert(indices.end(), voxelIndices.begin(), voxelIndices.end());
-                    baseIndex += __builtin_popcount(faceFlags) * 4; // 4 vertices per face
+                    baseIndex += popcount(faceFlags) * 4; // 4 vertices per face
                 }
             }
         }
