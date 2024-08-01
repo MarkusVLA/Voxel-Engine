@@ -30,7 +30,7 @@ Window::Window(int width, int height, const std::string& title) {
     glfwSetKeyCallback(window, InputListener::keyCallback);
     glfwSetCursorPosCallback(window, InputListener::cursorPositionCallback);
     glfwSetScrollCallback(window, InputListener::scrollCallback);
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED); // Capture and hide the cursor
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 }
 
 Window::~Window() {
@@ -56,4 +56,10 @@ GLFWwindow* Window::getGLFWwindow() {
 
 void Window::framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
+}
+
+void Window::toggleCursorMode() {
+    static bool cursorDisabled = true;
+    cursorDisabled = !cursorDisabled;
+    glfwSetInputMode(window, GLFW_CURSOR, cursorDisabled ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
 }

@@ -7,6 +7,7 @@ Renderer::Renderer()
     initOpenGL();
     camera = nullptr;
     projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 500.0f);
+    lightDir = glm::normalize(glm::vec3(1.0f, 0.5f, 0.3f));
 }
 
 Renderer::~Renderer() {
@@ -188,14 +189,12 @@ void Renderer::draw() {
         }
         glBindTexture(GL_TEXTURE_2D, textureID);
 
-         glm::vec3 lightDir = glm::normalize(glm::vec3(0.8f, 1.0f, 0.9f));
         objectShader->setVec3("lightDir", lightDir);
-        objectShader->setVec3("lightColor", glm::vec3(1.0f, 1.0f, 0.9f)); // Slightly warm light
+        objectShader->setVec3("lightColor", glm::vec3(1.0f, 0.8f, 0.6f)); 
         objectShader->setFloat("ambientStrength", 0.2f);
 
-        // Set fog uniforms (keeping your original values)
-        objectShader->setVec3("fogColor", glm::vec3(0.7f, 0.7f, 0.7f));
-        objectShader->setFloat("fogDensity", 0.001f); 
+        objectShader->setVec3("fogColor", glm::vec3(0.7f, 0.8f, 0.9f));
+        objectShader->setFloat("fogDensity", 0.004f); 
         
         std::unique_lock<std::mutex> lock(chunkMutex);
         for (const auto& [chunkPos, mesh] : chunkMeshes) {
@@ -215,4 +214,8 @@ void Renderer::setViewport(int width, int height) {
 
 void Renderer::setCamera(Camera* cam) {
     camera = cam;
+}
+
+void Renderer::setLightDir(glm::vec3 dir) {
+    lightDir = dir;
 }

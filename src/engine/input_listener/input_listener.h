@@ -16,6 +16,8 @@ private:
     static bool firstMouse;
     static float lastX;
     static float lastY;
+    static bool isCameraActive;
+
 };
 
 #endif

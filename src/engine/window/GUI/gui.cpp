@@ -2,6 +2,7 @@
 #include "gui.h"
 #include <sstream>
 #include <iomanip>
+#include <glm/trigonometric.hpp>
 
 GUI::GUI(GLFWwindow* window) {
     IMGUI_CHECKVERSION();
@@ -10,6 +11,9 @@ GUI::GUI(GLFWwindow* window) {
     ImGui::StyleColorsDark();
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330");
+    
+    azimuth = 0.0f;    
+    altitude = -45.0f; 
 }
 
 GUI::~GUI() {
@@ -32,8 +36,8 @@ void GUI::render() {
 void GUI::displayInfo(float fps, const glm::vec3& playerPos, int viewDistance, int loadedChunks) {
     ImGui::SetNextWindowPos(ImVec2(10, 10));
     ImGui::SetNextWindowBgAlpha(0.35f);
-    ImGui::Begin("Game Info", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | 
-                 ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove | 
+    ImGui::Begin("Game Info", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
+                 ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoMove |
                  ImGuiWindowFlags_NoSavedSettings);
 
     displayFPS(fps);
@@ -41,6 +45,8 @@ void GUI::displayInfo(float fps, const glm::vec3& playerPos, int viewDistance, i
     displayPlayerInfo(playerPos);
     ImGui::Separator();
     displayWorldInfo(viewDistance, loadedChunks);
+    ImGui::Separator();
+    displayLightDirectionSlider();
 
     ImGui::End();
 }
@@ -59,4 +65,22 @@ void GUI::displayPlayerInfo(const glm::vec3& playerPos) {
 void GUI::displayWorldInfo(int viewDistance, int loadedChunks) {
     ImGui::Text("View Distance: %d chunks", viewDistance);
     ImGui::Text("Loaded Chunks: %d", loadedChunks);
+}
+
+void GUI::displayLightDirectionSlider() {
+    ImGui::Text("Light Direction");
+    ImGui::SliderFloat("Azimuth", &azimuth, 0.0f, 360.0f);
+    ImGui::SliderFloat("Altitude", &altitude, -90.0f, 90.0f);
+}
+
+glm::vec3 GUI::getLightDirection() {
+    // Convert spherical coordinates to Cartesian coordinates
+    float azimuthRad = glm::radians(azimuth);
+    float altitudeRad = glm::radians(altitude);
+    
+    float x = glm::cos(altitudeRad) * glm::sin(azimuthRad);
+    float y = glm::sin(altitudeRad);
+    float z = glm::cos(altitudeRad) * glm::cos(azimuthRad);
+
+    return glm::normalize(glm::vec3(x, y, z));
 }

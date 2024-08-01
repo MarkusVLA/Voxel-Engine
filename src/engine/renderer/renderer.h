@@ -31,6 +31,8 @@ public:
     void removeChunk(const glm::ivec2& chunkPos);
     void processChunkUpdates();
 
+    void setLightDir(glm::vec3 dir);
+
 private:
     struct ChunkMesh {
         GLuint VAO, VBO, EBO;
@@ -57,7 +59,6 @@ private:
     Shader* skyboxShader;
     Camera* camera;
     glm::mat4 projection;
-
     std::queue<ChunkUpdate> chunkUpdateQueue;
     std::mutex queueMutex;
     std::mutex chunkMutex;
@@ -65,11 +66,13 @@ private:
     std::condition_variable queueCV;
     std::atomic<bool> shouldExit;
     std::atomic<bool> textureLoaded;
+    glm::vec3 lightDir;
 
     void initOpenGL();
     void addChunkImpl(const glm::ivec2& chunkPos, const std::vector<float>& vertices, const std::vector<unsigned int>& indices);
     void updateChunkImpl(const glm::ivec2& chunkPos, const std::vector<float>& vertices, const std::vector<unsigned int>& indices);
     void removeChunkImpl(const glm::ivec2& chunkPos);
 };
+
 
 #endif // RENDERER_H

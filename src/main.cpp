@@ -36,6 +36,12 @@ int main() {
         double lastFPSPrintTime = glfwGetTime();
 
         while (!window.shouldClose()) {
+
+            if (glfwGetKey(window.getGLFWwindow(), GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+                window.toggleCursorMode();
+            }
+
+            
             double currentFrame = glfwGetTime();
             double deltaTime = currentFrame - lastFrame;
             lastFrame = currentFrame;
@@ -58,6 +64,7 @@ int main() {
             }
 
             renderer.processChunkUpdates();
+            renderer.setLightDir(gui.getLightDirection());
 
             // Calculate FPS
             frameCount++;

@@ -16,11 +16,16 @@ public:
     void newFrame();
     void render();
     void displayInfo(float fps, const glm::vec3& playerPos, int viewDistance, int loadedChunks);
+    glm::vec3 getLightDirection();
 
 private:
     void displayFPS(float fps);
     void displayPlayerInfo(const glm::vec3& playerPos);
     void displayWorldInfo(int viewDistance, int loadedChunks);
+    void displayLightDirectionSlider();
+
+    float azimuth;
+    float altitude;  
 };
 
 #endif // GUI_H
