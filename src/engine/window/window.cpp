@@ -31,6 +31,8 @@ Window::Window(int width, int height, const std::string& title) {
     glfwSetCursorPosCallback(window, InputListener::cursorPositionCallback);
     glfwSetScrollCallback(window, InputListener::scrollCallback);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+    cursorEnabled = false;
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 }
 
 Window::~Window() {
@@ -59,7 +61,10 @@ void Window::framebuffer_size_callback(GLFWwindow* window, int width, int height
 }
 
 void Window::toggleCursorMode() {
-    static bool cursorDisabled = true;
-    cursorDisabled = !cursorDisabled;
-    glfwSetInputMode(window, GLFW_CURSOR, cursorDisabled ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
+    cursorEnabled = !cursorEnabled;
+    glfwSetInputMode(window, GLFW_CURSOR, cursorEnabled ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED);
+}
+
+bool Window::isCursorEnabled() const {
+    return cursorEnabled;
 }

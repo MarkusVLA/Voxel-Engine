@@ -14,6 +14,7 @@ int main() {
         Window window(1000, 600, "OpenGL Window");
         Camera camera(glm::vec3(0.0f, 128.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, 0.0f);
         InputListener::setCamera(&camera);
+        InputListener::setWindow(&window);
         SkyBox skyBox;
         int chunkWidth = 16;
         int chunkHeight = 128;
