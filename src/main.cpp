@@ -8,6 +8,7 @@
 #include "world/chunk/chunk_manager.h"
 #include <iostream>
 
+
 int main() {
     try {
         Window window(1000, 600, "OpenGL Window");
@@ -18,7 +19,7 @@ int main() {
         int chunkWidth = 16;
         int chunkHeight = 256;
         int chunkDepth = 16;
-        int viewDistance = 10;
+        int viewDistance = 16;
 
         ChunkManager chunkManager(chunkWidth, chunkHeight, chunkDepth, viewDistance);
         chunkManager.updatePlayerPosition(camera.getPosition());

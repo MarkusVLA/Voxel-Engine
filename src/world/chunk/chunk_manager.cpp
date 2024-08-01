@@ -99,36 +99,26 @@ void ChunkManager::expandLoadedArea(const glm::ivec2& newCenterChunk) {
     for (int x = start_x; x <= end_x; ++x) {
         for (int z = start_z; z <= end_z; ++z) {
             glm::ivec2 chunkPos(x, z);
-            
             std::lock_guard<std::mutex> lock(chunksMutex);
             if (chunks.find(chunkPos) == chunks.end()) {
-                float priority = calculateChunkPriority(chunkPos, newCenterChunk);
-                priorityTaskQueue.push({chunkPos, priority});
+                taskQueue.push([this, chunkPos] {
+                    auto chunk = std::make_shared<Chunk>(chunkWidth, chunkHeight, chunkDepth, chunkPos);
+                    std::vector<float> vertices = chunk->getVertexData();
+                    std::vector<unsigned int> indices = chunk->getIndexData();
+                    
+                    {
+                        std::lock_guard<std::mutex> lock(chunksMutex);
+                        chunks[chunkPos] = chunk;
+                    }
+                    
+                    renderQueue.push({chunkPos, std::move(vertices), std::move(indices)});
+                });
             }
         }
     }
 
-    while (!priorityTaskQueue.empty()) {
-        auto task = priorityTaskQueue.top();
-        priorityTaskQueue.pop();
-        
-        taskQueue.push([this, task] {
-            auto chunk = std::make_shared<Chunk>(chunkWidth, chunkHeight, chunkDepth, task.chunkPos);
-            std::vector<float> vertices = chunk->getVertexData();
-            std::vector<unsigned int> indices = chunk->getIndexData();
-            
-            {
-                std::lock_guard<std::mutex> lock(chunksMutex);
-                chunks[task.chunkPos] = chunk;
-            }
-            renderQueue.push({task.chunkPos, std::move(vertices), std::move(indices)});
-            
-        });
-    }
-
-    std::cout << "Render Queue: " <<  renderQueue.size() << "\n"
-                 "Task Queue: " << taskQueue.size() << std::endl;
-
+    std::cout << "Render Queue: " << renderQueue.size() << "\n"
+              << "Task Queue: " << taskQueue.size() << std::endl;
 }
 
 

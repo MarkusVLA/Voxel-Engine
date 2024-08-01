@@ -43,7 +43,6 @@ private:
     ThreadSafeQueue<std::function<void()>> taskQueue;
     ThreadSafeQueue<std::tuple<glm::ivec2, std::vector<float>, std::vector<unsigned int>>> renderQueue;
     glm::ivec2 lastLoadedCenterChunk;
-    std::priority_queue<ChunkTask> priorityTaskQueue;
 
     void loadChunks();
     void unloadChunks();

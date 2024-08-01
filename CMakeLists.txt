@@ -3,6 +3,16 @@ project(OpenGL)
 
 set(CMAKE_CXX_STANDARD 20)
 
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Release)
+endif()
+
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+  set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+  set(CMAKE_CXX_FLAGS_RELEASE "/O2")
+endif()
+
 find_package(OpenGL REQUIRED)
 add_subdirectory(libs/glfw)
 add_subdirectory(libs/glm)
@@ -31,7 +41,6 @@ add_executable(app
     src/world/skybox.cpp
     src/world/chunk/chunk_manager.cpp
     src/utils/perlin.cpp
-
 )
 
 target_link_libraries(app ${OPENGL_gl_LIBRARY} glm glfw glad freetype)
