@@ -22,6 +22,7 @@ public:
     void updatePlayerPosition(const glm::vec3& playerPos);
     std::shared_ptr<Chunk> getChunk(const glm::ivec2& chunkPos);
     ThreadSafeQueue<std::tuple<glm::ivec2, std::vector<float>, std::vector<unsigned int>>>& getRenderQueue();
+    int getLoadedChunksCount() const;
 
 private:
     struct ChunkTask {

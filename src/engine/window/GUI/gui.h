@@ -6,6 +6,7 @@
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
 
 class GUI {
 public:
@@ -14,10 +15,12 @@ public:
 
     void newFrame();
     void render();
-    void displayFPS(float fps);
+    void displayInfo(float fps, const glm::vec3& playerPos, int viewDistance, int loadedChunks);
 
 private:
-    float fps;
+    void displayFPS(float fps);
+    void displayPlayerInfo(const glm::vec3& playerPos);
+    void displayWorldInfo(int viewDistance, int loadedChunks);
 };
 
 #endif // GUI_H

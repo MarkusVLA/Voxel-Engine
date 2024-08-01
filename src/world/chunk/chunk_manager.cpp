@@ -7,7 +7,7 @@
 ChunkManager::ChunkManager(int chunkWidth, int chunkHeight, int chunkDepth, int viewDistance)
     : chunkWidth(chunkWidth), chunkHeight(chunkHeight), chunkDepth(chunkDepth), viewDistance(viewDistance), 
       running(true), lastLoadedCenterChunk(0, 0) {
-    startWorkers(4); 
+    startWorkers(2); 
 }
 
 ChunkManager::~ChunkManager() {
@@ -129,4 +129,10 @@ bool ChunkManager::isChunkInLoadDistance(const glm::ivec2& chunkPos, const glm::
 
 float ChunkManager::calculateChunkPriority(const glm::ivec2& chunkPos, const glm::ivec2& playerChunk) {
     return glm::length(glm::vec2(chunkPos) - glm::vec2(playerChunk));
+}
+
+
+
+int ChunkManager::getLoadedChunksCount() const {
+    return chunks.size();
 }
