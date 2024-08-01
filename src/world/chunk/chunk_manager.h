@@ -24,6 +24,12 @@ public:
     ThreadSafeQueue<std::tuple<glm::ivec2, std::vector<float>, std::vector<unsigned int>>>& getRenderQueue();
     int getLoadedChunksCount() const;
 
+    bool raycastBlock(const glm::vec3& start, const glm::vec3& direction, float maxDistance, glm::vec3& outHitPosition, glm::vec3& outHitNormal, glm::ivec2& outChunkPos);
+
+    bool breakBlock(const glm::vec3& start, const glm::vec3& direction, float maxDistance);
+    bool placeBlock(const glm::vec3& start, const glm::vec3& direction, float maxDistance, VoxelType type);
+
+
 private:
     struct ChunkTask {
         glm::ivec2 chunkPos;
@@ -53,6 +59,7 @@ private:
     void expandLoadedArea(const glm::ivec2& newCenterChunk);
     bool isChunkInLoadDistance(const glm::ivec2& chunkPos, const glm::ivec2& centerChunk);
     float calculateChunkPriority(const glm::ivec2& chunkPos, const glm::ivec2& playerChunk);
+
 };
 
 #endif // CHUNKMANAGER_H

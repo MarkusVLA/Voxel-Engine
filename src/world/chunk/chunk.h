@@ -23,6 +23,11 @@ public:
 
     glm::vec2 getIndex() const;
     bool operator==(const Chunk& other) const;
+    bool raycast(const glm::vec3& start, const glm::vec3& direction, float maxDistance, glm::vec3& outHitPosition, glm::vec3& outHitNormal) const;
+
+    bool breakBlock(const glm::vec3& start, const glm::vec3& direction, float maxDistance);
+    bool placeBlock(const glm::vec3& start, const glm::vec3& direction, float maxDistance, VoxelType type);
+
 
 
 private:

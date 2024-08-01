@@ -1,4 +1,4 @@
-// gui.cpp
+#define GL_SILENCE_DEPRECATION
 #include "gui.h"
 #include <sstream>
 #include <iomanip>
@@ -12,15 +12,63 @@ GUI::GUI(GLFWwindow* window) {
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330");
     
-    azimuth = 0.0f;    
-    altitude = -45.0f; 
+    azimuth = 0.0f;
+    altitude = -90.0f;
+
+    float crosshairVertices[] = {
+        -0.01f, 0.0f, 0.0f,
+         0.01f, 0.0f, 0.0f,
+         0.0f, -0.016f, 0.0f,
+         0.0f,  0.016f, 0.0f
+    };
+
+    glGenVertexArrays(1, &crosshairVAO);
+    glGenBuffers(1, &crosshairVBO);
+    glBindVertexArray(crosshairVAO);
+    glBindBuffer(GL_ARRAY_BUFFER, crosshairVBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(crosshairVertices), crosshairVertices, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+
+    // Crosshair shader
+    const char* vertexShaderSource = R"(
+        #version 330 core
+        layout (location = 0) in vec3 aPos;
+        void main() {
+            gl_Position = vec4(aPos.x, aPos.y, 0.0, 1.0);
+        }
+    )";
+    const char* fragmentShaderSource = R"(
+        #version 330 core
+        out vec4 FragColor;
+        void main() {
+            FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+        }
+    )";
+
+    unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
+    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
+    glCompileShader(vertexShader);
+    unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
+    glCompileShader(fragmentShader);
+    crosshairShaderProgram = glCreateProgram();
+    glAttachShader(crosshairShaderProgram, vertexShader);
+    glAttachShader(crosshairShaderProgram, fragmentShader);
+    glLinkProgram(crosshairShaderProgram);
+    glDeleteShader(vertexShader);
+    glDeleteShader(fragmentShader);
 }
 
 GUI::~GUI() {
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();
+    glDeleteVertexArrays(1, &crosshairVAO);
+    glDeleteBuffers(1, &crosshairVBO);
+    glDeleteProgram(crosshairShaderProgram);
 }
+
 
 void GUI::newFrame() {
     ImGui_ImplOpenGL3_NewFrame();
@@ -32,6 +80,7 @@ void GUI::render() {
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
+
 
 void GUI::displayInfo(float fps, const glm::vec3& playerPos, int viewDistance, int loadedChunks) {
     ImGui::SetNextWindowPos(ImVec2(10, 10));
@@ -83,4 +132,10 @@ glm::vec3 GUI::getLightDirection() {
     float z = glm::cos(altitudeRad) * glm::cos(azimuthRad);
 
     return glm::normalize(glm::vec3(x, y, z));
+}
+
+void GUI::drawCrosshair() {
+    glUseProgram(crosshairShaderProgram);
+    glBindVertexArray(crosshairVAO);
+    glDrawArrays(GL_LINES, 0, 4);
 }

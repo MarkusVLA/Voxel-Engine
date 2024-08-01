@@ -188,7 +188,6 @@ void Renderer::draw() {
             objectShader->setMat4("projection", projection);
         }
         glBindTexture(GL_TEXTURE_2D, textureID);
-
         objectShader->setVec3("lightDir", lightDir);
         objectShader->setVec3("lightColor", glm::vec3(1.0f, 0.8f, 0.6f)); 
         objectShader->setFloat("ambientStrength", 0.2f);

@@ -116,11 +116,7 @@ void ChunkManager::expandLoadedArea(const glm::ivec2& newCenterChunk) {
             }
         }
     }
-
-    std::cout << "Render Queue: " << renderQueue.size() << "\n"
-              << "Task Queue: " << taskQueue.size() << std::endl;
 }
-
 
 bool ChunkManager::isChunkInLoadDistance(const glm::ivec2& chunkPos, const glm::ivec2& centerChunk) {
     glm::ivec2 diff = glm::abs(chunkPos - centerChunk);

@@ -13,15 +13,27 @@ int main() {
     try {
         Window window(1000, 600, "OpenGL Window");
         Camera camera(glm::vec3(0.0f, 128.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, 0.0f);
+
         InputListener::setCamera(&camera);
         InputListener::setWindow(&window);
+
         SkyBox skyBox;
         int chunkWidth = 16;
         int chunkHeight = 128;
         int chunkDepth = 16;
         int viewDistance = 14;
         ChunkManager chunkManager(chunkWidth, chunkHeight, chunkDepth, viewDistance);
+        
+        InputListener::setChunkManager(&chunkManager);
+
+        // Set input callbacks
+        glfwSetKeyCallback(window.getGLFWwindow(), InputListener::keyCallback);
+        glfwSetCursorPosCallback(window.getGLFWwindow(), InputListener::cursorPositionCallback);
+        glfwSetScrollCallback(window.getGLFWwindow(), InputListener::scrollCallback);
+        glfwSetMouseButtonCallback(window.getGLFWwindow(), InputListener::mouseButtonCallback);
+
         chunkManager.updatePlayerPosition(camera.getPosition());
+
         Renderer renderer;
         renderer.setCamera(&camera);
         renderer.initShaders();
@@ -29,6 +41,9 @@ int main() {
         renderer.setSkyboxData(skyBox.GetVertices());
 
         GUI gui(window.getGLFWwindow());
+        glfwSetWindowUserPointer(window.getGLFWwindow(), &gui);
+
+
 
         double lastFrame = glfwGetTime();
         glm::vec3 lastUpdatePosition = camera.getPosition();
@@ -37,17 +52,12 @@ int main() {
         double lastFPSPrintTime = glfwGetTime();
 
         while (!window.shouldClose()) {
-
-            if (glfwGetKey(window.getGLFWwindow(), GLFW_KEY_ESCAPE) == GLFW_PRESS) {
-                window.toggleCursorMode();
-            }
-
-            
             double currentFrame = glfwGetTime();
             double deltaTime = currentFrame - lastFrame;
             lastFrame = currentFrame;
 
             window.pollEvents();
+
             glm::vec3 currentCameraPos = camera.getPosition();
             if (glm::distance(currentCameraPos, lastUpdatePosition) > chunkWidth / 2.0f) {
                 chunkManager.updatePlayerPosition(currentCameraPos);
@@ -79,12 +89,11 @@ int main() {
             gui.displayInfo(fps, camera.getPosition(), viewDistance, chunkManager.getLoadedChunksCount());
 
             renderer.draw();
-
             gui.render();
+            gui.drawCrosshair();  // Draw crosshair last
 
             window.swapBuffers();
         }
-
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;
         return -1;

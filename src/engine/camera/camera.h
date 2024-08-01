@@ -20,6 +20,7 @@ public:
     void processKeyboard(CameraMovement direction, float deltaTime);
     void processMouseMovement(float xoffset, float yoffset, bool constrainPitch = true);
     void processMouseScroll(float yoffset);
+    glm::vec3 getRayDirection() const;
 
     float getZoom();
     glm::vec3 getPosition();
