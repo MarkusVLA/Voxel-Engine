@@ -15,8 +15,8 @@ void main()
 {
     vec4 viewPos = view * vec4(aPos, 1.0);
     gl_Position = projection * viewPos;
-
-    FogDepth = length(viewPos.xyz); // Use the length of the view position for fog depth
+    
+    FogDepth = length(viewPos.xyz);
 
     float texSize = 1.0 / 16.0;
     vec2 baseCoord = vec2(mod(aVoxelType, 16.0), floor(aVoxelType / 16.0)) * texSize;

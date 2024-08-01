@@ -7,7 +7,7 @@ enum VoxelType{
     
     GRASS = 0, 
     STONE = 1,
-    DIRT = 3,
+    DIRT = 2,
     BRICK = 7,
     COBBLESTONE = 16,
     IRONORE = 33,

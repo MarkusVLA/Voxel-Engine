@@ -20,9 +20,6 @@ public:
     ~ChunkManager();
 
     void updatePlayerPosition(const glm::vec3& playerPos);
-    std::vector<glm::ivec2> getNewlyLoadedChunks();
-    std::vector<glm::ivec2> getUnloadedChunks();
-    void clearChunkChanges();
     std::shared_ptr<Chunk> getChunk(const glm::ivec2& chunkPos);
     ThreadSafeQueue<std::tuple<glm::ivec2, std::vector<float>, std::vector<unsigned int>>>& getRenderQueue();
 
@@ -40,8 +37,6 @@ private:
     int viewDistance;
     glm::vec3 playerPosition;
     std::unordered_map<glm::ivec2, std::shared_ptr<Chunk>, IVec2Hash> chunks;
-    std::vector<glm::ivec2> newlyLoadedChunks;
-    std::vector<glm::ivec2> unloadedChunks;
     std::vector<std::thread> workers;
     std::mutex chunksMutex;
     std::atomic_bool running;

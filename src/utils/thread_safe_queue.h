@@ -1,3 +1,6 @@
+#ifndef THREAD_SAFE_QUEUE_H
+#define THREAD_SAFE_QUEUE_H
+
 #include <queue>
 #include <mutex>
 #include <condition_variable>
@@ -28,8 +31,15 @@ public:
         queue_.pop();
     }
 
+    size_t size() const {
+        std::lock_guard<std::mutex> lock(mutex_);
+        return queue_.size();
+    }
+
 private:
     std::queue<T> queue_;
-    std::mutex mutex_;
+    mutable std::mutex mutex_;
     std::condition_variable condition_;
 };
+
+#endif // THREAD_SAFE_QUEUE_H

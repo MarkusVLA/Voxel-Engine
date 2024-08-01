@@ -9,34 +9,89 @@ Chunk::Chunk(int width, int height, int depth, glm::vec2 index)
     generateTerrain();
 }
 
+
+Chunk::~Chunk(){
+    for (Voxel * voxel: voxels){
+        delete voxel;
+    }
+}
+
+
 void Chunk::generateTerrain() {
     voxels.resize(width * height * depth, nullptr);
+    
+    // First pass: Generate basic terrain and large cave structures
     for (int x = 0; x < width; ++x) {
         for (int z = 0; z < depth; ++z) {
             int maxY = generateHeight(x, z);
-            for (int y = 0; y < maxY; ++y) {
+            for (int y = 0; y < height; ++y) {
                 glm::vec3 voxelPosition(x, y, z);
                 unsigned int voxelIndex = coordsToIndex(voxelPosition);
-                if (y < maxY / 2) {
-                    voxels[voxelIndex] = new Voxel(voxelPosition, STONE);
-                } else {
-                    voxels[voxelIndex] = new Voxel(voxelPosition, GRASS);
+                
+                if (y < maxY) {
+                    // Determine the block type based on height
+                    VoxelType blockType;
+                    if (y == maxY - 1) {
+                        blockType = GRASS;
+                    } else if (y > maxY - 4) {
+                        blockType = DIRT;
+                    } else {
+                        blockType = STONE;
+                    }
+
+                    // Generate caves
+                    float caveNoise1 = perlinNoise.noise((x + index_.x * width) * 0.03f, 
+                                                         y * 0.03f, 
+                                                         (z + index_.y * depth) * 0.03f);
+                    float caveNoise2 = perlinNoise.noise((x + index_.x * width) * 0.05f, 
+                                                         y * 0.05f, 
+                                                         (z + index_.y * depth) * 0.05f);
+                    float caveDensity = (caveNoise1 + 0.5 * caveNoise2) / 1.5;
+
+                    if (caveDensity > 0.55f && y < maxY - 5) {
+                        // This is a cave, don't place a block
+                        continue;
+                    }
+
+                    // Place the block
+                    voxels[voxelIndex] = new Voxel(voxelPosition, blockType);
+
+                    // Generate ore veins
+                    if (blockType == STONE) {
+                        float oreNoise = perlinNoise.noise((x + index_.x * width) * 0.2f, 
+                                                           y * 0.2f, 
+                                                           (z + index_.y * depth) * 0.2f);
+                        if (oreNoise > 0.8f) {
+                            voxels[voxelIndex] = new Voxel(voxelPosition, IRONORE);
+                        }
+                    }
                 }
             }
         }
     }
 }
 
+
 int Chunk::generateHeight(int x, int z) const {
-    float scale = 0.02f; 
-    float globalX = (x + index_.x * width) * scale;
-    float globalZ = (z + index_.y * depth) * scale;
+    float scale1 = 0.01f;
+    float scale2 = 0.05f;
+    float globalX = (x + index_.x * width);
+    float globalZ = (z + index_.y * depth);
 
     float baseHeight = 64.0f;
     float heightVariation = 32.0f;
+    float mountainousness = 16.0f;
 
-    return static_cast<int>(perlinNoise.noise(globalX, globalZ) * heightVariation + baseHeight);
+    float noise1 = perlinNoise.noise(globalX * scale1, globalZ * scale1);
+    float noise2 = perlinNoise.noise(globalX * scale2, globalZ * scale2);
+
+    return static_cast<int>(
+        (noise1 * heightVariation + baseHeight) +
+        (std::pow(std::max(0.0f, noise2), 2) * mountainousness)
+    );
 }
+
+
 
 std::vector<float> Chunk::getVertexData() const {
     std::vector<float> vertices;

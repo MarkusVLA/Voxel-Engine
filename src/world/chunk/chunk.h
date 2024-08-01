@@ -11,13 +11,13 @@ class Chunk {
 public:
 
     Chunk(int width, int height, int depth, glm::vec2 index);
+    ~Chunk();
 
     std::vector<float> getVertexData() const;
     std::vector<unsigned int> getIndexData() const;
     std::vector<float> getMesh() const; // Move to chunkmesh
     Voxel* getVoxel(const glm::vec3& pos) const;
     void setVoxel(const glm::vec3& pos, VoxelType type);
-    
 
     glm::vec2 getIndex() const;
     bool operator==(const Chunk& other) const;

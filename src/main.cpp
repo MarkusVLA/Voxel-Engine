@@ -10,17 +10,16 @@
 
 int main() {
     try {
-        Window window(1920, 1200, "OpenGL Window");
-
+        Window window(1000, 600, "OpenGL Window");
         Camera camera(glm::vec3(0.0f, 128.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, 0.0f);
         InputListener::setCamera(&camera);
-
         SkyBox skyBox;
 
-        int chunkWidth = 32;
+        int chunkWidth = 16;
         int chunkHeight = 256;
-        int chunkDepth = 32;
+        int chunkDepth = 16;
         int viewDistance = 10;
+
         ChunkManager chunkManager(chunkWidth, chunkHeight, chunkDepth, viewDistance);
         chunkManager.updatePlayerPosition(camera.getPosition());
 
@@ -31,6 +30,7 @@ int main() {
         renderer.setSkyboxData(skyBox.GetVertices());
 
         double lastFrame = glfwGetTime();
+        glm::vec3 lastUpdatePosition = camera.getPosition();
 
         while (!window.shouldClose()) {
             double currentFrame = glfwGetTime();
@@ -39,8 +39,11 @@ int main() {
 
             window.pollEvents();
 
-            glm::vec3 cameraPos = camera.getPosition();
-            chunkManager.updatePlayerPosition(cameraPos);
+            glm::vec3 currentCameraPos = camera.getPosition();
+            if (glm::distance(currentCameraPos, lastUpdatePosition) > chunkWidth / 2.0f) {
+                chunkManager.updatePlayerPosition(currentCameraPos);
+                lastUpdatePosition = currentCameraPos;
+            }
 
             std::tuple<glm::ivec2, std::vector<float>, std::vector<unsigned int>> item;
             while (chunkManager.getRenderQueue().tryPop(item)) {
@@ -52,12 +55,16 @@ int main() {
                 }
             }
 
-            chunkManager.clearChunkChanges();
+
             renderer.processChunkUpdates();
             renderer.draw();
-
             window.swapBuffers();
+
+            // Print FPS
+            static int frameCount = 0;
+            static double lastFPSPrintTime = glfwGetTime();
         }
+
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;
         return -1;

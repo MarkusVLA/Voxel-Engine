@@ -7,7 +7,7 @@
 ChunkManager::ChunkManager(int chunkWidth, int chunkHeight, int chunkDepth, int viewDistance)
     : chunkWidth(chunkWidth), chunkHeight(chunkHeight), chunkDepth(chunkDepth), viewDistance(viewDistance), 
       running(true), lastLoadedCenterChunk(0, 0) {
-    startWorkers(8); 
+    startWorkers(4); 
 }
 
 ChunkManager::~ChunkManager() {
@@ -39,9 +39,7 @@ void ChunkManager::unloadChunks() {
         glm::ivec2 chunkPos = it->first;
         
         if (!isChunkInLoadDistance(chunkPos, playerChunk)) {
-            renderQueue.push({chunkPos, {}, {}});  // Empty vectors to signal chunk removal
-            unloadedChunks.push_back(chunkPos);
-            std::cout << "Unloaded chunk at: " << chunkPos.x << ", " << chunkPos.y << std::endl;
+            renderQueue.push({chunkPos, {}, {}});  
             it = chunks.erase(it);
         } else {
             ++it;
@@ -78,21 +76,6 @@ void ChunkManager::workerFunction() {
     }
 }
 
-std::vector<glm::ivec2> ChunkManager::getNewlyLoadedChunks() {
-    std::lock_guard<std::mutex> lock(chunksMutex);
-    return newlyLoadedChunks;
-}
-
-std::vector<glm::ivec2> ChunkManager::getUnloadedChunks() {
-    std::lock_guard<std::mutex> lock(chunksMutex);
-    return unloadedChunks;
-}
-
-void ChunkManager::clearChunkChanges() {
-    std::lock_guard<std::mutex> lock(chunksMutex);
-    newlyLoadedChunks.clear();
-    unloadedChunks.clear();
-}
 
 std::shared_ptr<Chunk> ChunkManager::getChunk(const glm::ivec2& chunkPos) {
     std::lock_guard<std::mutex> lock(chunksMutex);
@@ -125,7 +108,6 @@ void ChunkManager::expandLoadedArea(const glm::ivec2& newCenterChunk) {
         }
     }
 
-    // Process prioritized tasks
     while (!priorityTaskQueue.empty()) {
         auto task = priorityTaskQueue.top();
         priorityTaskQueue.pop();
@@ -138,14 +120,15 @@ void ChunkManager::expandLoadedArea(const glm::ivec2& newCenterChunk) {
             {
                 std::lock_guard<std::mutex> lock(chunksMutex);
                 chunks[task.chunkPos] = chunk;
-                newlyLoadedChunks.push_back(task.chunkPos);
             }
-            
             renderQueue.push({task.chunkPos, std::move(vertices), std::move(indices)});
             
-            std::cout << "Loaded chunk at: " << task.chunkPos.x << ", " << task.chunkPos.y << std::endl;
         });
     }
+
+    std::cout << "Render Queue: " <<  renderQueue.size() << "\n"
+                 "Task Queue: " << taskQueue.size() << std::endl;
+
 }
 
 

@@ -54,6 +54,8 @@
         "unordered_set": "cpp",
         "__tree": "cpp",
         "map": "cpp",
-        "condition_variable": "cpp"
+        "condition_variable": "cpp",
+        "deque": "cpp",
+        "queue": "cpp"
     }
 }
