@@ -28,8 +28,7 @@ std::tuple<std::vector<float>, std::vector<unsigned int>, std::vector<float>, st
                 Voxel* voxel = getVoxel(pos);
                 if (voxel != nullptr) {
                     uint8_t faceFlags = getFaceFlags(pos);
-
-                    if (voxel->getType() == WATER) {
+                    if (voxel->isTranslucent()) {
                         addVoxelMesh(voxel, offset, faceFlags, waterVertices, waterIndices, waterBaseIndex);
                     } else {
                         addVoxelMesh(voxel, offset, faceFlags, solidVertices, solidIndices, solidBaseIndex);
@@ -38,7 +37,6 @@ std::tuple<std::vector<float>, std::vector<unsigned int>, std::vector<float>, st
             }
         }
     }
-
     return std::make_tuple(solidVertices, solidIndices, waterVertices, waterIndices);
 }
 
@@ -53,18 +51,22 @@ void Chunk::addVoxelMesh(Voxel* voxel, const glm::vec3& offset, uint8_t faceFlag
     std::vector<unsigned int> voxelIndices = voxel->getIndexData(baseIndex, faceFlags);
     indices.insert(indices.end(), voxelIndices.begin(), voxelIndices.end());
 
-    baseIndex += popcount(faceFlags) * 4; // 4 vertices per face
+    baseIndex += popcount(faceFlags) * 4;
 }
 
 uint8_t Chunk::getFaceFlags(glm::vec3 pos) const {
-    uint8_t flags = 0B00000000;
+    uint8_t flags = 0;
     Voxel* voxel = getVoxel(pos);
 
-    if (voxel->getType() == WATER) {
-        // Water voxel face culling: only generate the top face
+    if (voxel->getIsXShaped()) {
+        flags |= FACE_DIAGONAL_1 | FACE_DIAGONAL_2;
+    }
+    else if (voxel->getType() == WATER) {
         flags |= (pos.y == height - 1 || getVoxel({pos.x, pos.y + 1, pos.z}) == nullptr || getVoxel({pos.x, pos.y + 1, pos.z})->getType() != WATER) ? FACE_TOP : 0;
-    } else {
-        // Solid voxel face culling: generate faces if adjacent voxel is null, water, or X-shaped
+
+    } 
+    
+    else {
         flags |= (pos.z == depth - 1 || getVoxel({pos.x, pos.y, pos.z + 1}) == nullptr || getVoxel({pos.x, pos.y, pos.z + 1})->getType() == WATER || getVoxel({pos.x, pos.y, pos.z + 1})->getIsXShaped()) ? FACE_FRONT : 0;
         flags |= (pos.z == 0 || getVoxel({pos.x, pos.y, pos.z - 1}) == nullptr || getVoxel({pos.x, pos.y, pos.z - 1})->getType() == WATER || getVoxel({pos.x, pos.y, pos.z - 1})->getIsXShaped()) ? FACE_BACK : 0;
         flags |= (pos.x == 0 || getVoxel({pos.x - 1, pos.y, pos.z}) == nullptr || getVoxel({pos.x - 1, pos.y, pos.z})->getType() == WATER || getVoxel({pos.x - 1, pos.y, pos.z})->getIsXShaped()) ? FACE_LEFT : 0;

@@ -17,7 +17,6 @@ void main() {
     vec3 norm = normalize(Normal);
     vec3 lightDirection = normalize(lightDir);
 
-    // Blinn-Phong specular highlights
     vec3 viewDir = vec3(0.0, 0.0, 1.0); // assuming view direction is along z-axis
     vec3 halfwayDir = normalize(lightDirection + viewDir);
     float spec = pow(max(dot(norm, halfwayDir), 0.0), 32.0); // shininess factor
@@ -35,6 +34,8 @@ void main() {
 
     // Texture color
     vec4 texColor = texture(texture1, TexCoord);
+
+    
     vec3 result = lighting * texColor.rgb;
 
     // Apply fog
@@ -43,8 +44,6 @@ void main() {
     fogFactor = 1.0 - fogFactor;
     vec4 color = mix(vec4(fogColor, 1.0), vec4(result, texColor.a), fogFactor);
 
-    // Add blue tint and transparency
-    vec3 waterColor = vec3(0.0, 0.3, 0.6);
-    vec4 waterColorVec = vec4(waterColor, 0.6);  // Transparency
-    FragColor = mix(color, waterColorVec, 0.5);
+    // Use the alpha value from the texture
+    FragColor = vec4(color.rgb, texColor.a);
 }

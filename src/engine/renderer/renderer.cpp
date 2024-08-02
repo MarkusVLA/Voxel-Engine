@@ -32,7 +32,6 @@ Renderer::~Renderer() {
 
 }
 
-
 void Renderer::initOpenGL() {
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
@@ -219,7 +218,6 @@ void Renderer::loadTexture(const std::string& path) {
 void Renderer::draw() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    // Draw skybox
     glDepthFunc(GL_LEQUAL);
     if (skyboxShader && camera) {
         skyboxShader->use();
@@ -230,72 +228,85 @@ void Renderer::draw() {
         glDrawArrays(GL_TRIANGLES, 0, 36);
         glBindVertexArray(0);
     }
-    glDepthFunc(GL_LESS);
 
     if (!textureLoaded || !camera) {
         return;
     }
-
     glm::mat4 view = camera->getViewMatrix();
-
-    // Lock once for both solid and water rendering
     std::unique_lock<std::mutex> lock(chunkMutex);
 
-    // Draw solid chunks
     if (objectShader) {
+        glDisable(GL_BLEND);  // Disable blending for solid objects
         objectShader->use();
-        objectShader->setMat4("view", view);
-        objectShader->setMat4("projection", projection);
-        glBindTexture(GL_TEXTURE_2D, textureID);
-        objectShader->setVec3("lightDir", lightDir);
-        objectShader->setVec3("lightColor", glm::vec3(1.0f, 0.8f, 0.6f));
-        objectShader->setFloat("ambientStrength", 0.5f);
-        objectShader->setVec3("fogColor", glm::vec3(0.7f, 0.8f, 0.9f));
-        objectShader->setFloat("fogDensity", 0.003f);
+        setupShaderUniforms(objectShader, view, projection);
 
         for (const auto& [chunkPos, mesh] : chunkMeshes) {
-            glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(chunkPos.x * 16, 0, chunkPos.y * 16));
-            objectShader->setMat4("model", model);
-            glBindVertexArray(mesh.solidVAO);
-            glDrawElements(GL_TRIANGLES, mesh.solidIndexCount, GL_UNSIGNED_INT, 0);
+            renderChunk(objectShader, mesh.solidVAO, mesh.solidIndexCount, chunkPos);
         }
     }
 
-    // Draw water chunks
-    if (waterShader) {
-        waterShader->use();
-        waterShader->setMat4("view", view);
-        waterShader->setMat4("projection", projection);
-        glBindTexture(GL_TEXTURE_2D, textureID);
-        waterShader->setVec3("lightDir", lightDir);
-        waterShader->setVec3("cameraPos", camera->getPosition());
-        waterShader->setVec3("lightColor", glm::vec3(1.0f, 0.8f, 0.6f));
-        waterShader->setFloat("ambientStrength", 0.2f);
-        waterShader->setVec3("fogColor", glm::vec3(0.7f, 0.8f, 0.9f));
-        waterShader->setFloat("fogDensity", 0.003f);
-        waterShader->setFloat("time", static_cast<float>(glfwGetTime())); 
+    // Collect and sort transparent chunks
+    struct TransparentChunk {
+        glm::ivec2 chunkPos;
+        ChunkMesh mesh;
+        float distance;
+    };
+    
+    std::vector<TransparentChunk> transparentChunks;
+    for (const auto& [chunkPos, mesh] : chunkMeshes) {
+        if (mesh.waterIndexCount > 0) { 
+            glm::vec3 chunkCenter = glm::vec3(chunkPos.x * 16 + 8, 0, chunkPos.y * 16 + 8);
+            float distance = glm::distance(camera->getPosition(), chunkCenter);
+            transparentChunks.push_back({chunkPos, mesh, distance});
+        }
+    }
 
+    std::sort(transparentChunks.begin(), transparentChunks.end(),
+        [](const TransparentChunk& a, const TransparentChunk& b) {
+            return a.distance > b.distance;  // Sort from farthest to nearest
+        });
+
+
+    if (waterShader) {
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-        for (const auto& [chunkPos, mesh] : chunkMeshes) {
-            glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(chunkPos.x * 16, 0, chunkPos.y * 16));
-            waterShader->setMat4("model", model);
-            glBindVertexArray(mesh.waterVAO);
-            glDrawElements(GL_TRIANGLES, mesh.waterIndexCount, GL_UNSIGNED_INT, 0);
+        for (const auto& chunk : transparentChunks) {
+            renderChunk(waterShader, chunk.mesh.waterVAO, chunk.mesh.waterIndexCount, chunk.chunkPos);
         }
 
+        glDepthMask(GL_TRUE);  // Re-enable depth writing
         glDisable(GL_BLEND);
     }
 
-    // Unbind VAO
     glBindVertexArray(0);
-
-    // Check for OpenGL errors
     GLenum err;
     while ((err = glGetError()) != GL_NO_ERROR) {
         std::cerr << "OpenGL error: " << err << std::endl;
     }
+}
+
+
+void Renderer::setupShaderUniforms(Shader* shader, const glm::mat4& view, glm::mat4& projection) {
+    shader->setMat4("view", view);
+    shader->setMat4("projection", projection);
+    glBindTexture(GL_TEXTURE_2D, textureID);
+    shader->setVec3("lightDir", lightDir);
+    shader->setVec3("cameraPos", camera->getPosition());
+    shader->setVec3("lightColor", glm::vec3(1.0f, 0.8f, 0.6f));
+    shader->setFloat("ambientStrength", 0.2f);
+    shader->setVec3("fogColor", glm::vec3(0.7f, 0.8f, 0.9f));
+    shader->setFloat("fogDensity", 0.003f);
+    shader->setFloat("time", static_cast<float>(glfwGetTime())); 
+}
+
+
+
+void Renderer::renderChunk(Shader* shader, GLuint vao, int indexCount, const glm::ivec2& chunkPos) {
+    glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(chunkPos.x * 16, 0, chunkPos.y * 16));
+    shader->setMat4("model", model);
+    glBindVertexArray(vao);
+    glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
 }
 
 

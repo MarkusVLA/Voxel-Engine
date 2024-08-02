@@ -14,13 +14,13 @@ enum VoxelType{
     GRAVEL = 19,
     LOG = 20,
     IRONORE = 33,
-    TALLGRASS = 40,
-    LEAVES = 53,
+    TALLGRASS = 39,
+    LEAVES = 52,
     SNOW = 66,
     ICE = 67,
     CACTUS = 70,
     SANDSTONE = 176,
-    WATER = 255
+    WATER = 223
 
 };
 

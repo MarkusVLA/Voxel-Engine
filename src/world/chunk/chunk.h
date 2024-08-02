@@ -10,6 +10,8 @@
 #include "../../utils/pop_count.h"
 #include "terrain_generator/terrain_generator.h"
 
+
+
 class Chunk {
 public:
     Chunk(int width, int height, int depth, glm::vec2 index);

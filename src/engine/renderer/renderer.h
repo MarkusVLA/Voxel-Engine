@@ -81,6 +81,9 @@ private:
     void updateChunkImpl(const glm::ivec2& chunkPos, const std::vector<float>& solidVertices, const std::vector<unsigned int>& solidIndices,
                          const std::vector<float>& waterVertices, const std::vector<unsigned int>& waterIndices);
     void removeChunkImpl(const glm::ivec2& chunkPos);
+    void setupShaderUniforms(Shader* shader, const glm::mat4& view, glm::mat4& projection);
+    void renderChunk(Shader* shader, GLuint vao, int indexCount, const glm::ivec2& chunkPos);
+
 };
 
 #endif // RENDERER_H

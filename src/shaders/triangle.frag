@@ -26,6 +26,12 @@ void main()
     vec3 lighting = ambient + diffuse;
 
     vec4 texColor = texture(texture1, TexCoord);
+    
+    // Check for black color and make it transparent
+    if (texColor.rgb == vec3(0.0, 0.0, 0.0)) {
+        texColor.a = 0.0;
+    }
+
     vec3 result = lighting * texColor.rgb;
 
     // Apply fog
