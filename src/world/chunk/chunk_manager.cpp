@@ -1,5 +1,3 @@
-// ChunkManager.cpp
-
 #include "chunk_manager.h"
 #include <iostream>
 #include <cmath>
@@ -7,7 +5,7 @@
 ChunkManager::ChunkManager(int chunkWidth, int chunkHeight, int chunkDepth, int viewDistance)
     : chunkWidth(chunkWidth), chunkHeight(chunkHeight), chunkDepth(chunkDepth), viewDistance(viewDistance), 
       running(true), lastLoadedCenterChunk(0, 0) {
-    startWorkers(2); 
+    startWorkers(4); 
 }
 
 ChunkManager::~ChunkManager() {
@@ -105,6 +103,8 @@ void ChunkManager::expandLoadedArea(const glm::ivec2& newCenterChunk) {
                     auto chunk = std::make_shared<Chunk>(chunkWidth, chunkHeight, chunkDepth, chunkPos);
                     std::vector<float> vertices = chunk->getVertexData();
                     std::vector<unsigned int> indices = chunk->getIndexData();
+                    std::vector<float> mesh = chunk->getMesh();
+
                     
                     {
                         std::lock_guard<std::mutex> lock(chunksMutex);
@@ -122,12 +122,6 @@ bool ChunkManager::isChunkInLoadDistance(const glm::ivec2& chunkPos, const glm::
     glm::ivec2 diff = glm::abs(chunkPos - centerChunk);
     return diff.x <= viewDistance && diff.y <= viewDistance;
 }
-
-float ChunkManager::calculateChunkPriority(const glm::ivec2& chunkPos, const glm::ivec2& playerChunk) {
-    return glm::length(glm::vec2(chunkPos) - glm::vec2(playerChunk));
-}
-
-
 
 int ChunkManager::getLoadedChunksCount() const {
     return chunks.size();

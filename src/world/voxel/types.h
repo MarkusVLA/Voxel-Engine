@@ -11,7 +11,8 @@ enum VoxelType{
     BRICK = 7,
     COBBLESTONE = 16,
     IRONORE = 33,
-    GRAVE = 19
+    GRAVE = 19,
+    TALLGRASS = 39
 
 };
 

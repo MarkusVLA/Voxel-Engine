@@ -1,3 +1,4 @@
+// renderer.cpp
 #include "renderer.h"
 #include "texture_loader.h"
 #include <iostream>

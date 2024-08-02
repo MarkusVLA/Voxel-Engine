@@ -1,3 +1,4 @@
+// renderer.h
 #ifndef RENDERER_H
 #define RENDERER_H
 
@@ -73,6 +74,5 @@ private:
     void updateChunkImpl(const glm::ivec2& chunkPos, const std::vector<float>& vertices, const std::vector<unsigned int>& indices);
     void removeChunkImpl(const glm::ivec2& chunkPos);
 };
-
 
 #endif // RENDERER_H

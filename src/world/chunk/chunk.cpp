@@ -19,8 +19,7 @@ Chunk::~Chunk(){
 
 void Chunk::generateTerrain() {
     voxels.resize(width * height * depth, nullptr);
-    
-    // First pass: Generate basic terrain and large cave structures
+
     for (int x = 0; x < width; ++x) {
         for (int z = 0; z < depth; ++z) {
             int maxY = generateHeight(x, z);
@@ -46,17 +45,14 @@ void Chunk::generateTerrain() {
                     float caveNoise2 = perlinNoise.noise((x + index_.x * width) * 0.05f, 
                                                          y * 0.05f, 
                                                          (z + index_.y * depth) * 0.05f);
-                    float caveDensity = (caveNoise1 + 0.5 * caveNoise2) / 1.5;
+                    float caveDensity = (caveNoise1 + 0.5f * caveNoise2) / 1.5f;
 
                     if (caveDensity > 0.55f && y < maxY - 5) {
-                        // This is a cave, don't place a block
                         continue;
                     }
 
-                    // Place the block
                     voxels[voxelIndex] = new Voxel(voxelPosition, blockType);
 
-                    // Generate ore veins
                     if (blockType == STONE) {
                         float oreNoise = perlinNoise.noise((x + index_.x * width) * 0.2f, 
                                                            y * 0.2f, 
@@ -103,7 +99,7 @@ std::vector<float> Chunk::getVertexData() const {
                 glm::vec3 pos(x, y, z);
                 Voxel* voxel = getVoxel(pos);
                 if (voxel != nullptr) {
-                    uint8_t faceFlags = getFaceFlags(glm::vec3(x,y,z));
+                    uint8_t faceFlags = getFaceFlags(pos);
                     std::vector<float> voxelVertices = voxel->getVertexData(offset, faceFlags);
                     vertices.insert(vertices.end(), voxelVertices.begin(), voxelVertices.end());
                 }
@@ -123,7 +119,6 @@ std::vector<unsigned int> Chunk::getIndexData() const {
                 glm::vec3 pos(x, y, z);
                 Voxel* voxel = getVoxel(pos);
                 if (voxel != nullptr) {
-                    // Check which faces need to be drawn
                     uint8_t faceFlags = getFaceFlags(glm::vec3(x,y,z));
                     std::vector<unsigned int> voxelIndices = voxel->getIndexData(baseIndex, faceFlags);
                     indices.insert(indices.end(), voxelIndices.begin(), voxelIndices.end());
