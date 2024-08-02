@@ -101,9 +101,7 @@ void ChunkManager::expandLoadedArea(const glm::ivec2& newCenterChunk) {
             if (chunks.find(chunkPos) == chunks.end()) {
                 taskQueue.push([this, chunkPos] {
                     auto chunk = std::make_shared<Chunk>(chunkWidth, chunkHeight, chunkDepth, chunkPos);
-                    std::vector<float> vertices = chunk->getVertexData();
-                    std::vector<unsigned int> indices = chunk->getIndexData();
-                    std::vector<float> mesh = chunk->getMesh();
+                    auto [vertices, indices] = chunk->getMesh();
 
                     
                     {

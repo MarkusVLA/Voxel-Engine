@@ -194,7 +194,7 @@ void Renderer::draw() {
         objectShader->setFloat("ambientStrength", 0.2f);
 
         objectShader->setVec3("fogColor", glm::vec3(0.7f, 0.8f, 0.9f));
-        objectShader->setFloat("fogDensity", 0.004f); 
+        objectShader->setFloat("fogDensity", 0.003f); 
         
         std::unique_lock<std::mutex> lock(chunkMutex);
         for (const auto& [chunkPos, mesh] : chunkMeshes) {
