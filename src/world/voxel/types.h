@@ -12,7 +12,8 @@ enum VoxelType{
     COBBLESTONE = 16,
     IRONORE = 33,
     GRAVE = 19,
-    TALLGRASS = 39
+    TALLGRASS = 39,
+    WATER = 255
 
 };
 

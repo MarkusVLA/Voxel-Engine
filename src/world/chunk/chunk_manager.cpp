@@ -3,9 +3,9 @@
 #include <cmath>
 
 ChunkManager::ChunkManager(int chunkWidth, int chunkHeight, int chunkDepth, int viewDistance)
-    : chunkWidth(chunkWidth), chunkHeight(chunkHeight), chunkDepth(chunkDepth), viewDistance(viewDistance), 
+    : chunkWidth(chunkWidth), chunkHeight(chunkHeight), chunkDepth(chunkDepth), viewDistance(viewDistance),
       running(true), lastLoadedCenterChunk(0, 0) {
-    startWorkers(4); 
+    startWorkers(2);
 }
 
 ChunkManager::~ChunkManager() {
@@ -32,12 +32,10 @@ void ChunkManager::loadChunks() {
 void ChunkManager::unloadChunks() {
     glm::ivec2 playerChunk = worldToChunkCoords(playerPosition);
     std::lock_guard<std::mutex> lock(chunksMutex);
-
     for (auto it = chunks.begin(); it != chunks.end();) {
         glm::ivec2 chunkPos = it->first;
-        
         if (!isChunkInLoadDistance(chunkPos, playerChunk)) {
-            renderQueue.push({chunkPos, {}, {}});  
+            renderQueue.push({chunkPos, {}, {}, {}, {}});  // Empty vectors for both solid and water meshes
             it = chunks.erase(it);
         } else {
             ++it;
@@ -48,12 +46,10 @@ void ChunkManager::unloadChunks() {
 void ChunkManager::updatePlayerPosition(const glm::vec3& position) {
     playerPosition = position;
     glm::ivec2 currentChunk = worldToChunkCoords(position);
-    
     if (currentChunk != lastLoadedCenterChunk) {
         expandLoadedArea(currentChunk);
         lastLoadedCenterChunk = currentChunk;
     }
-    
     unloadChunks();
 }
 
@@ -74,7 +70,6 @@ void ChunkManager::workerFunction() {
     }
 }
 
-
 std::shared_ptr<Chunk> ChunkManager::getChunk(const glm::ivec2& chunkPos) {
     std::lock_guard<std::mutex> lock(chunksMutex);
     auto it = chunks.find(chunkPos);
@@ -84,7 +79,7 @@ std::shared_ptr<Chunk> ChunkManager::getChunk(const glm::ivec2& chunkPos) {
     return nullptr;
 }
 
-ThreadSafeQueue<std::tuple<glm::ivec2, std::vector<float>, std::vector<unsigned int>>>& ChunkManager::getRenderQueue() {
+ThreadSafeQueue<std::tuple<glm::ivec2, std::vector<float>, std::vector<unsigned int>, std::vector<float>, std::vector<unsigned int>>>& ChunkManager::getRenderQueue() {
     return renderQueue;
 }
 
@@ -93,7 +88,6 @@ void ChunkManager::expandLoadedArea(const glm::ivec2& newCenterChunk) {
     int end_x = newCenterChunk.x + viewDistance;
     int start_z = newCenterChunk.y - viewDistance;
     int end_z = newCenterChunk.y + viewDistance;
-
     for (int x = start_x; x <= end_x; ++x) {
         for (int z = start_z; z <= end_z; ++z) {
             glm::ivec2 chunkPos(x, z);
@@ -101,15 +95,12 @@ void ChunkManager::expandLoadedArea(const glm::ivec2& newCenterChunk) {
             if (chunks.find(chunkPos) == chunks.end()) {
                 taskQueue.push([this, chunkPos] {
                     auto chunk = std::make_shared<Chunk>(chunkWidth, chunkHeight, chunkDepth, chunkPos);
-                    auto [vertices, indices] = chunk->getMesh();
-
-                    
+                    auto [solidVertices, solidIndices, waterVertices, waterIndices] = chunk->getMesh();
                     {
                         std::lock_guard<std::mutex> lock(chunksMutex);
                         chunks[chunkPos] = chunk;
                     }
-                    
-                    renderQueue.push({chunkPos, std::move(vertices), std::move(indices)});
+                    renderQueue.push({chunkPos, std::move(solidVertices), std::move(solidIndices), std::move(waterVertices), std::move(waterIndices)});
                 });
             }
         }

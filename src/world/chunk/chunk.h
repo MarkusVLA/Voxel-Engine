@@ -15,12 +15,18 @@ public:
     ~Chunk();
 
     // New function to get both vertex and index data
-    std::tuple<std::vector<float>, std::vector<unsigned int>> getMesh() const;
+    std::tuple<std::vector<float>, std::vector<unsigned int>, 
+               std::vector<float>, std::vector<unsigned int>> getMesh() const; 
 
     Voxel* getVoxel(const glm::vec3& pos) const;
     void setVoxel(const glm::vec3& pos, VoxelType type);
     glm::vec2 getIndex() const;
+
     bool operator==(const Chunk& other) const;
+    void addVoxelMesh(Voxel* voxel, const glm::vec3& offset, uint8_t faceFlags, 
+                         std::vector<float>& vertices, std::vector<unsigned int>& indices, 
+                         unsigned int& baseIndex) const;
+
 
 private:
     glm::vec3 indexToCoords(int index) const;

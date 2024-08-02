@@ -12,17 +12,15 @@
 int main() {
     Window window(1000, 600, "OpenGL Window");
     Camera camera(glm::vec3(0.0f, 128.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, 0.0f);
-
     InputListener::setCamera(&camera);
     InputListener::setWindow(&window);
-
     SkyBox skyBox;
+
     int chunkWidth = 16;
     int chunkHeight = 256;
     int chunkDepth = 16;
-    int viewDistance = 16;
+    int viewDistance = 10;
     ChunkManager chunkManager(chunkWidth, chunkHeight, chunkDepth, viewDistance);
-    
     InputListener::setChunkManager(&chunkManager);
 
     // Set input callbacks
@@ -41,8 +39,6 @@ int main() {
 
     GUI gui(window.getGLFWwindow());
     glfwSetWindowUserPointer(window.getGLFWwindow(), &gui);
-
-
 
     double lastFrame = glfwGetTime();
     glm::vec3 lastUpdatePosition = camera.getPosition();
@@ -63,11 +59,11 @@ int main() {
             lastUpdatePosition = currentCameraPos;
         }
 
-        std::tuple<glm::ivec2, std::vector<float>, std::vector<unsigned int>> item;
+        std::tuple<glm::ivec2, std::vector<float>, std::vector<unsigned int>, std::vector<float>, std::vector<unsigned int>> item;
         while (chunkManager.getRenderQueue().tryPop(item)) {
-            const auto& [chunkPos, vertices, indices] = item;
-            if (!vertices.empty() && !indices.empty()) {
-                renderer.addChunk(chunkPos, vertices, indices);
+            const auto& [chunkPos, solidVertices, solidIndices, waterVertices, waterIndices] = item;
+            if ((!solidVertices.empty() && !solidIndices.empty()) || (!waterVertices.empty() && !waterIndices.empty())) {
+                renderer.addChunk(chunkPos, solidVertices, solidIndices, waterVertices, waterIndices);
             } else {
                 renderer.removeChunk(chunkPos);
             }
@@ -86,11 +82,11 @@ int main() {
 
         gui.newFrame();
         gui.displayInfo(fps, camera.getPosition(), viewDistance, chunkManager.getLoadedChunksCount());
-
         renderer.draw();
         gui.render();
         gui.drawCrosshair();
         window.swapBuffers();
     }
+
     return 0;
 }

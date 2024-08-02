@@ -16,9 +16,10 @@ Chunk::~Chunk(){
     }
 }
 
-
 void Chunk::generateTerrain() {
     voxels.resize(width * height * depth, nullptr);
+
+    const int waterLevel = 64; // Adjust this value to set the water level
 
     for (int x = 0; x < width; ++x) {
         for (int z = 0; z < depth; ++z) {
@@ -48,6 +49,10 @@ void Chunk::generateTerrain() {
                     float caveDensity = (caveNoise1 + 0.5f * caveNoise2) / 1.5f;
 
                     if (caveDensity > 0.55f && y < maxY - 5) {
+                        // If it's a cave and below water level, fill with water
+                        if (y < waterLevel) {
+                            voxels[voxelIndex] = new Voxel(voxelPosition, WATER);
+                        }
                         continue;
                     }
 
@@ -61,6 +66,9 @@ void Chunk::generateTerrain() {
                             voxels[voxelIndex] = new Voxel(voxelPosition, IRONORE);
                         }
                     }
+                } else if (y < waterLevel) {
+                    // Fill empty spaces below water level with water
+                    voxels[voxelIndex] = new Voxel(voxelPosition, WATER);
                 }
             }
         }
@@ -88,11 +96,14 @@ int Chunk::generateHeight(int x, int z) const {
 }
 
 
-std::tuple<std::vector<float>, std::vector<unsigned int>> Chunk::getMesh() const {
-    std::vector<float> vertices;
-    std::vector<unsigned int> indices;
+std::tuple<std::vector<float>, std::vector<unsigned int>, std::vector<float>, std::vector<unsigned int>> Chunk::getMesh() const {
+    std::vector<float> solidVertices;
+    std::vector<unsigned int> solidIndices;
+    std::vector<float> waterVertices;
+    std::vector<unsigned int> waterIndices;
     glm::vec3 offset(index_.x * width, 0, index_.y * depth);
-    unsigned int baseIndex = 0;
+    unsigned int solidBaseIndex = 0;
+    unsigned int waterBaseIndex = 0;
     
     for (int x = 0; x < width; ++x) {
         for (int y = 0; y < height; ++y) {
@@ -102,22 +113,35 @@ std::tuple<std::vector<float>, std::vector<unsigned int>> Chunk::getMesh() const
                 if (voxel != nullptr) {
                     uint8_t faceFlags = getFaceFlags(pos);
                     
-                    // Get vertex data
-                    std::vector<float> voxelVertices = voxel->getVertexData(offset, faceFlags);
-                    vertices.insert(vertices.end(), voxelVertices.begin(), voxelVertices.end());
-                    
-                    // Get index data
-                    std::vector<unsigned int> voxelIndices = voxel->getIndexData(baseIndex, faceFlags);
-                    indices.insert(indices.end(), voxelIndices.begin(), voxelIndices.end());
-                    
-                    baseIndex += popcount(faceFlags) * 4; // 4 vertices per face
+                    if (voxel->getType() == WATER) {
+                        addVoxelMesh(voxel, offset, faceFlags, waterVertices, waterIndices, waterBaseIndex);
+                    } else {
+                        addVoxelMesh(voxel, offset, faceFlags, solidVertices, solidIndices, solidBaseIndex);
+                    }
                 }
             }
         }
     }
     
-    return std::make_tuple(vertices, indices);
+    return std::make_tuple(solidVertices, solidIndices, waterVertices, waterIndices);
 }
+
+void Chunk::addVoxelMesh(Voxel* voxel, const glm::vec3& offset, uint8_t faceFlags, 
+                         std::vector<float>& vertices, std::vector<unsigned int>& indices, 
+                         unsigned int& baseIndex) const {
+    // Get vertex data
+    std::vector<float> voxelVertices = voxel->getVertexData(offset, faceFlags);
+    vertices.insert(vertices.end(), voxelVertices.begin(), voxelVertices.end());
+    
+    // Get index data
+    std::vector<unsigned int> voxelIndices = voxel->getIndexData(baseIndex, faceFlags);
+    indices.insert(indices.end(), voxelIndices.begin(), voxelIndices.end());
+    
+    baseIndex += popcount(faceFlags) * 4; // 4 vertices per face
+}
+
+
+
 uint8_t Chunk::getFaceFlags(glm::vec3 pos) const {
     uint8_t flags = 0B00000000;
     flags |= (pos.z == depth - 1 || getVoxel({pos.x, pos.y, pos.z + 1}) == nullptr) ? FACE_FRONT : 0;

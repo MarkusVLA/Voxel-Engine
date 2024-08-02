@@ -27,30 +27,35 @@ public:
     void setCamera(Camera* camera);
     void setSkyboxData(const std::vector<float>& vertices);
     void loadTexture(const std::string& path);
-    void addChunk(const glm::ivec2& chunkPos, const std::vector<float>& vertices, const std::vector<unsigned int>& indices);
-    void updateChunk(const glm::ivec2& chunkPos, const std::vector<float>& vertices, const std::vector<unsigned int>& indices);
+    void addChunk(const glm::ivec2& chunkPos, const std::vector<float>& solidVertices, const std::vector<unsigned int>& solidIndices,
+                  const std::vector<float>& waterVertices, const std::vector<unsigned int>& waterIndices);
+    void updateChunk(const glm::ivec2& chunkPos, const std::vector<float>& solidVertices, const std::vector<unsigned int>& solidIndices,
+                     const std::vector<float>& waterVertices, const std::vector<unsigned int>& waterIndices);
     void removeChunk(const glm::ivec2& chunkPos);
     void processChunkUpdates();
-
     void setLightDir(glm::vec3 dir);
 
 private:
-    struct ChunkMesh {
-        GLuint VAO, VBO, EBO;
-        size_t indexCount;
-    };
-
     enum class ChunkUpdateType {
         Add,
         Update,
         Remove
     };
 
+    struct ChunkMesh {
+        GLuint solidVAO, solidVBO, solidEBO;
+        GLuint waterVAO, waterVBO, waterEBO;
+        size_t solidIndexCount;
+        size_t waterIndexCount;
+    };
+
     struct ChunkUpdate {
         ChunkUpdateType type;
         glm::ivec2 chunkPos;
-        std::vector<float> vertices;
-        std::vector<unsigned int> indices;
+        std::vector<float> solidVertices;
+        std::vector<unsigned int> solidIndices;
+        std::vector<float> waterVertices;
+        std::vector<unsigned int> waterIndices;
     };
 
     std::unordered_map<glm::ivec2, ChunkMesh, IVec2Hash> chunkMeshes;
@@ -70,8 +75,10 @@ private:
     glm::vec3 lightDir;
 
     void initOpenGL();
-    void addChunkImpl(const glm::ivec2& chunkPos, const std::vector<float>& vertices, const std::vector<unsigned int>& indices);
-    void updateChunkImpl(const glm::ivec2& chunkPos, const std::vector<float>& vertices, const std::vector<unsigned int>& indices);
+    void addChunkImpl(const glm::ivec2& chunkPos, const std::vector<float>& solidVertices, const std::vector<unsigned int>& solidIndices,
+                      const std::vector<float>& waterVertices, const std::vector<unsigned int>& waterIndices);
+    void updateChunkImpl(const glm::ivec2& chunkPos, const std::vector<float>& solidVertices, const std::vector<unsigned int>& solidIndices,
+                         const std::vector<float>& waterVertices, const std::vector<unsigned int>& waterIndices);
     void removeChunkImpl(const glm::ivec2& chunkPos);
 };
 
