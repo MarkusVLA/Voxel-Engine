@@ -19,7 +19,7 @@ int main() {
     int chunkWidth = 16;
     int chunkHeight = 256;
     int chunkDepth = 16;
-    int viewDistance = 14;
+    int viewDistance = 16;
     ChunkManager chunkManager(chunkWidth, chunkHeight, chunkDepth, viewDistance);
     InputListener::setChunkManager(&chunkManager);
 

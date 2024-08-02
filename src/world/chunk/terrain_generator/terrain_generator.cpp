@@ -5,7 +5,7 @@
 
 const std::array<BiomeParams, 5> TerrainGenerator::biomeParameters = {{
     {64, 10, -0.5f, 0.0f},  // SNOWY_TUNDRA
-    {64, 26, 0.0f, 0.3f},  // MOUNTAINS
+    {64, 32, 0.0f, 0.3f},  // MOUNTAINS
     {64, 8, 0.3f, 0.3f},    // PLAINS
     {64, 15, 0.3f, 0.6f},   // FOREST
     {64, 6, 0.7f, 0.0f}     // DESERT
@@ -35,7 +35,7 @@ void TerrainGenerator::generateTerrain(std::vector<Voxel*>& voxels) {
                 unsigned int voxelIndex = coordsToIndex(voxelPosition);
 
                 if (y < maxY) {
-                    VoxelType blockType = determineBlockType(y, maxY, primaryBiome);
+                    VoxelType blockType = determineBlockType(y, maxY, primaryBiome, waterLevel);
 
                     // Generate caves
                     float caveDensity = generateCaveDensity(x, y, z);
@@ -56,7 +56,7 @@ void TerrainGenerator::generateTerrain(std::vector<Voxel*>& voxels) {
             }
 
             // Add surface features
-            addSurfaceFeatures(x, z, maxY, primaryBiome, voxels);
+            addSurfaceFeatures(x, z, maxY, primaryBiome, waterLevel, voxels);
         }
     }
 }
@@ -104,7 +104,14 @@ int TerrainGenerator::generateHeight(int x, int z, BiomeType primaryBiome, Biome
     return static_cast<int>(primaryHeight * (1 - blendFactor) + secondaryHeight * blendFactor);
 }
 
-VoxelType TerrainGenerator::determineBlockType(int y, int maxY, BiomeType biome) {
+VoxelType TerrainGenerator::determineBlockType(int y, int maxY, BiomeType biome, int waterLevel) {
+    if (y <= waterLevel - 3) {
+        return DIRT;
+    }
+    if (y <= waterLevel) {
+        return SAND;
+    }
+
     if (y == maxY - 1) {
         switch (biome) {
             case SNOWY_TUNDRA: return SNOW;
@@ -144,31 +151,35 @@ void TerrainGenerator::generateOres(int x, int y, int z, unsigned int voxelIndex
     }
 }
 
-void TerrainGenerator::addSurfaceFeatures(int x, int z, int maxY, BiomeType biome, std::vector<Voxel*>& voxels) {
-    if (maxY < height - 1) {
+void TerrainGenerator::addSurfaceFeatures(int x, int z, int maxY, BiomeType biome, int waterLevel, std::vector<Voxel*>& voxels) {
+    if (maxY < height - 1 && maxY > waterLevel) {
         // Use random number for feature generation
         float random = static_cast<float>(rand()) / RAND_MAX;
 
         switch (biome) {
             case SNOWY_TUNDRA:
-                if (random < 0.001f) {  // 1% chance for ice spike
+                if (random < 0.001f) {  
                     generateIceSpike(x, z, maxY, voxels);
                 }
                 break;
             case MOUNTAINS:
-                if (maxY < 100 && random < 0.001f) {  // 3% chance for tree below height 100
+                if (maxY < 100 && random < 0.001f) { 
                     generateTree(x, z, maxY, voxels);
                 }
                 break;
+
+            case PLAINS:
+                break;
+
             case FOREST:
-                if (random < 0.08f) {  // 8% chance for tree
+                if (random < 0.01f) { 
                     generateTree(x, z, maxY, voxels);
-                } else if (random < 0.2f) {  // 12% chance for tall grass (0.2 - 0.08)
+                } else if (random < 0.2f) { 
                     voxels[coordsToIndex({x, maxY, z})] = new Voxel({x, maxY, z}, TALLGRASS);
                 }
                 break;
             case DESERT:
-                if (random < 0.01f) {  // 1% chance for cactus
+                if (random < 0.003f) {  
                     generateCactus(x, z, maxY, voxels);
                 }
                 break;

@@ -8,7 +8,7 @@
 #include "../voxel/types.h"
 #include "../../utils/perlin.h"
 #include "../../utils/pop_count.h"
-#include "terrain_generator.h"
+#include "terrain_generator/terrain_generator.h"
 
 class Chunk {
 public:
