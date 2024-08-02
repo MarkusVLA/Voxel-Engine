@@ -64,17 +64,18 @@ uint8_t Chunk::getFaceFlags(glm::vec3 pos) const {
         // Water voxel face culling: only generate the top face
         flags |= (pos.y == height - 1 || getVoxel({pos.x, pos.y + 1, pos.z}) == nullptr || getVoxel({pos.x, pos.y + 1, pos.z})->getType() != WATER) ? FACE_TOP : 0;
     } else {
-        // Solid voxel face culling: generate faces if adjacent voxel is null or water
-        flags |= (pos.z == depth - 1 || getVoxel({pos.x, pos.y, pos.z + 1}) == nullptr || getVoxel({pos.x, pos.y, pos.z + 1})->getType() == WATER) ? FACE_FRONT : 0;
-        flags |= (pos.z == 0 || getVoxel({pos.x, pos.y, pos.z - 1}) == nullptr || getVoxel({pos.x, pos.y, pos.z - 1})->getType() == WATER) ? FACE_BACK : 0;
-        flags |= (pos.x == 0 || getVoxel({pos.x - 1, pos.y, pos.z}) == nullptr || getVoxel({pos.x - 1, pos.y, pos.z})->getType() == WATER) ? FACE_LEFT : 0;
-        flags |= (pos.x == width - 1 || getVoxel({pos.x + 1, pos.y, pos.z}) == nullptr || getVoxel({pos.x + 1, pos.y, pos.z})->getType() == WATER) ? FACE_RIGHT : 0;
-        flags |= (pos.y == height - 1 || getVoxel({pos.x, pos.y + 1, pos.z}) == nullptr || getVoxel({pos.x, pos.y + 1, pos.z})->getType() == WATER) ? FACE_TOP : 0;
-        flags |= (pos.y == 0 || getVoxel({pos.x, pos.y - 1, pos.z}) == nullptr || getVoxel({pos.x, pos.y - 1, pos.z})->getType() == WATER) ? FACE_BOTTOM : 0;
+        // Solid voxel face culling: generate faces if adjacent voxel is null, water, or X-shaped
+        flags |= (pos.z == depth - 1 || getVoxel({pos.x, pos.y, pos.z + 1}) == nullptr || getVoxel({pos.x, pos.y, pos.z + 1})->getType() == WATER || getVoxel({pos.x, pos.y, pos.z + 1})->getIsXShaped()) ? FACE_FRONT : 0;
+        flags |= (pos.z == 0 || getVoxel({pos.x, pos.y, pos.z - 1}) == nullptr || getVoxel({pos.x, pos.y, pos.z - 1})->getType() == WATER || getVoxel({pos.x, pos.y, pos.z - 1})->getIsXShaped()) ? FACE_BACK : 0;
+        flags |= (pos.x == 0 || getVoxel({pos.x - 1, pos.y, pos.z}) == nullptr || getVoxel({pos.x - 1, pos.y, pos.z})->getType() == WATER || getVoxel({pos.x - 1, pos.y, pos.z})->getIsXShaped()) ? FACE_LEFT : 0;
+        flags |= (pos.x == width - 1 || getVoxel({pos.x + 1, pos.y, pos.z}) == nullptr || getVoxel({pos.x + 1, pos.y, pos.z})->getType() == WATER || getVoxel({pos.x + 1, pos.y, pos.z})->getIsXShaped()) ? FACE_RIGHT : 0;
+        flags |= (pos.y == height - 1 || getVoxel({pos.x, pos.y + 1, pos.z}) == nullptr || getVoxel({pos.x, pos.y + 1, pos.z})->getType() == WATER || getVoxel({pos.x, pos.y + 1, pos.z})->getIsXShaped()) ? FACE_TOP : 0;
+        flags |= (pos.y == 0 || getVoxel({pos.x, pos.y - 1, pos.z}) == nullptr || getVoxel({pos.x, pos.y - 1, pos.z})->getType() == WATER || getVoxel({pos.x, pos.y - 1, pos.z})->getIsXShaped()) ? FACE_BOTTOM : 0;
     }
 
     return flags;
 }
+
 
 Voxel* Chunk::getVoxel(const glm::vec3& pos) const {
     unsigned int index = coordsToIndex(pos);

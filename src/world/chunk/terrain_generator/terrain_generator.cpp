@@ -169,13 +169,15 @@ void TerrainGenerator::addSurfaceFeatures(int x, int z, int maxY, BiomeType biom
                 break;
 
             case PLAINS:
-                break;
+                if (random < 0.2f) { 
+                    voxels[coordsToIndex({x, maxY, z})] = new Voxel({x, maxY, z}, TALLGRASS, true);
+                }
 
             case FOREST:
                 if (random < 0.01f) { 
                     generateTree(x, z, maxY, voxels);
                 } else if (random < 0.2f) { 
-                    voxels[coordsToIndex({x, maxY, z})] = new Voxel({x, maxY, z}, TALLGRASS);
+                    voxels[coordsToIndex({x, maxY, z})] = new Voxel({x, maxY, z}, TALLGRASS, true);
                 }
                 break;
             case DESERT:
