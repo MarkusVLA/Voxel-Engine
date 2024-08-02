@@ -23,7 +23,6 @@ int main() {
     ChunkManager chunkManager(chunkWidth, chunkHeight, chunkDepth, viewDistance);
     InputListener::setChunkManager(&chunkManager);
 
-    // Set input callbacks
     glfwSetKeyCallback(window.getGLFWwindow(), InputListener::keyCallback);
     glfwSetCursorPosCallback(window.getGLFWwindow(), InputListener::cursorPositionCallback);
     glfwSetScrollCallback(window.getGLFWwindow(), InputListener::scrollCallback);

@@ -12,8 +12,8 @@ GUI::GUI(GLFWwindow* window) {
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330");
     
-    azimuth = 0.0f;
-    altitude = -90.0f;
+    azimuth = 45.0f;
+    altitude = 20.0f;
 
     float crosshairVertices[] = {
         -0.01f, 0.0f, 0.0f,
