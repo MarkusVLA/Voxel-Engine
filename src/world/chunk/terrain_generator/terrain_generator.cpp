@@ -20,7 +20,7 @@ void TerrainGenerator::generateTerrain(std::vector<Voxel*>& voxels) {
     voxels.resize(width * height * depth, nullptr);
 
     const int waterLevel = 62;
-    const float biomeScale = 0.002f;
+    const float biomeScale = 0.001f;
 
     for (int x = 0; x < width; ++x) {
         for (int z = 0; z < depth; ++z) {
