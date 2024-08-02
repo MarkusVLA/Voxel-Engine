@@ -19,7 +19,7 @@ int main() {
     int chunkWidth = 16;
     int chunkHeight = 256;
     int chunkDepth = 16;
-    int viewDistance = 10;
+    int viewDistance = 14;
     ChunkManager chunkManager(chunkWidth, chunkHeight, chunkDepth, viewDistance);
     InputListener::setChunkManager(&chunkManager);
 
@@ -72,7 +72,6 @@ int main() {
         renderer.processChunkUpdates();
         renderer.setLightDir(gui.getLightDirection());
 
-        // Calculate FPS
         frameCount++;
         if (currentFrame - lastFPSPrintTime >= 1.0) {
             fps = frameCount / (currentFrame - lastFPSPrintTime);

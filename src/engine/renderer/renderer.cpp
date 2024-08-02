@@ -8,7 +8,7 @@
 #include <iostream>
 
 Renderer::Renderer() 
-    : shouldExit(false), textureLoaded(false), objectShader(nullptr), skyboxShader(nullptr) {
+    : shouldExit(false), textureLoaded(false), objectShader(nullptr), skyboxShader(nullptr), waterShader(nullptr) {
     initOpenGL();
     camera = nullptr;
     projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 500.0f);
@@ -28,6 +28,8 @@ Renderer::~Renderer() {
     glDeleteBuffers(1, &skyboxVBO);
     delete objectShader;
     delete skyboxShader;
+    delete waterShader;
+
 }
 
 
@@ -48,6 +50,7 @@ void Renderer::initShaders() {
     try {
         objectShader = new Shader("../src/shaders/triangle.vert", "../src/shaders/triangle.frag");
         skyboxShader = new Shader("../src/shaders/skybox.vert", "../src/shaders/skybox.frag");
+        waterShader = new Shader("../src/shaders/water.vert", "../src/shaders/water.frag");
     } catch (const std::exception& e) {
         std::cerr << "Shader compilation failed: " << e.what() << std::endl;
         throw;
@@ -218,58 +221,83 @@ void Renderer::draw() {
 
     // Draw skybox
     glDepthFunc(GL_LEQUAL);
-    if (skyboxShader) {
+    if (skyboxShader && camera) {
         skyboxShader->use();
-        if (camera) {
-            glm::mat4 view = glm::mat4(glm::mat3(camera->getViewMatrix()));
-            skyboxShader->setMat4("view", view);
-            skyboxShader->setMat4("projection", projection);
-        }
+        glm::mat4 view = glm::mat4(glm::mat3(camera->getViewMatrix()));
+        skyboxShader->setMat4("view", view);
+        skyboxShader->setMat4("projection", projection);
         glBindVertexArray(skyboxVAO);
         glDrawArrays(GL_TRIANGLES, 0, 36);
         glBindVertexArray(0);
     }
     glDepthFunc(GL_LESS);
 
+    if (!textureLoaded || !camera) {
+        return;
+    }
+
+    glm::mat4 view = camera->getViewMatrix();
+
+    // Lock once for both solid and water rendering
+    std::unique_lock<std::mutex> lock(chunkMutex);
+
     // Draw solid chunks
-    if (objectShader && textureLoaded) {
+    if (objectShader) {
         objectShader->use();
-        if (camera) { 
-            glm::mat4 view = camera->getViewMatrix();
-            objectShader->setMat4("view", view);
-            objectShader->setMat4("projection", projection);
-        }
+        objectShader->setMat4("view", view);
+        objectShader->setMat4("projection", projection);
         glBindTexture(GL_TEXTURE_2D, textureID);
         objectShader->setVec3("lightDir", lightDir);
-        objectShader->setVec3("lightColor", glm::vec3(1.0f, 0.8f, 0.6f)); 
-        objectShader->setFloat("ambientStrength", 0.2f);
+        objectShader->setVec3("lightColor", glm::vec3(1.0f, 0.8f, 0.6f));
+        objectShader->setFloat("ambientStrength", 0.5f);
         objectShader->setVec3("fogColor", glm::vec3(0.7f, 0.8f, 0.9f));
-        objectShader->setFloat("fogDensity", 0.003f); 
-        
-        std::unique_lock<std::mutex> lock(chunkMutex);
+        objectShader->setFloat("fogDensity", 0.003f);
+
         for (const auto& [chunkPos, mesh] : chunkMeshes) {
             glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(chunkPos.x * 16, 0, chunkPos.y * 16));
             objectShader->setMat4("model", model);
-
             glBindVertexArray(mesh.solidVAO);
             glDrawElements(GL_TRIANGLES, mesh.solidIndexCount, GL_UNSIGNED_INT, 0);
         }
+    }
 
-        // Draw water chunks
+    // Draw water chunks
+    if (waterShader) {
+        waterShader->use();
+        waterShader->setMat4("view", view);
+        waterShader->setMat4("projection", projection);
+        glBindTexture(GL_TEXTURE_2D, textureID);
+        waterShader->setVec3("lightDir", lightDir);
+        waterShader->setVec3("cameraPos", camera->getPosition());
+        waterShader->setVec3("lightColor", glm::vec3(1.0f, 0.8f, 0.6f));
+        waterShader->setFloat("ambientStrength", 0.2f);
+        waterShader->setVec3("fogColor", glm::vec3(0.7f, 0.8f, 0.9f));
+        waterShader->setFloat("fogDensity", 0.003f);
+        waterShader->setFloat("time", static_cast<float>(glfwGetTime())); 
+
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
         for (const auto& [chunkPos, mesh] : chunkMeshes) {
             glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(chunkPos.x * 16, 0, chunkPos.y * 16));
-            objectShader->setMat4("model", model);
-
+            waterShader->setMat4("model", model);
             glBindVertexArray(mesh.waterVAO);
             glDrawElements(GL_TRIANGLES, mesh.waterIndexCount, GL_UNSIGNED_INT, 0);
         }
 
         glDisable(GL_BLEND);
     }
+
+    // Unbind VAO
+    glBindVertexArray(0);
+
+    // Check for OpenGL errors
+    GLenum err;
+    while ((err = glGetError()) != GL_NO_ERROR) {
+        std::cerr << "OpenGL error: " << err << std::endl;
+    }
 }
+
 
 void Renderer::setViewport(int width, int height) {
     glViewport(0, 0, width, height);

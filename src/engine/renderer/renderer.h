@@ -63,6 +63,7 @@ private:
     unsigned int textureID;
     Shader* objectShader;
     Shader* skyboxShader;
+    Shader* waterShader;
     Camera* camera;
     glm::mat4 projection;
     std::queue<ChunkUpdate> chunkUpdateQueue;

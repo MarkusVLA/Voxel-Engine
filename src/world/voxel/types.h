@@ -10,9 +10,16 @@ enum VoxelType{
     DIRT = 2,
     BRICK = 7,
     COBBLESTONE = 16,
+    SAND = 18,
+    GRAVEL = 19,
+    LOG = 20,
     IRONORE = 33,
-    GRAVE = 19,
     TALLGRASS = 39,
+    LEAVES = 53,
+    SNOW = 66,
+    ICE = 67,
+    CACTUS = 70,
+    SANDSTONE = 176,
     WATER = 255
 
 };

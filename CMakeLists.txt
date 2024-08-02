@@ -70,6 +70,7 @@ add_executable(app
     src/engine/camera/camera.cpp
     src/world/voxel/voxel.cpp
     src/world/chunk/chunk.cpp
+    src/world/chunk/terrain_generator.cpp
     src/world/skybox.cpp
     src/world/chunk/chunk_manager.cpp
     src/utils/perlin.cpp
