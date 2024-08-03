@@ -32,7 +32,7 @@ uniform int aVoxelType;
 
 void main() {
     vec4 texColor = texture(texture1, TexCoord);
-    if (texColor.a < 0.2)
+    if (texColor.a == 0.0)
         discard;
 
     vec3 norm = normalize(Normal);
