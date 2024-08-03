@@ -4,8 +4,11 @@
 #include "../../global.h"
 
 
+
 class Frustum {
 public:
+
+
     Frustum(const glm::mat4& m) {
         float t;
 
@@ -53,7 +56,7 @@ public:
     }
 
     bool isChunkVisible(const glm::ivec2& chunkPos) const {
-        glm::vec3 center(chunkPos.x * 16.0f + 8.0f, 128.0f, chunkPos.y * 16.0f + 8.0f);
+        glm::vec3 center(chunkPos.x * CHUNK_WIDTH + CHUNK_WIDTH / 2, CHUNK_HEIGHT / 2, chunkPos.y * CHUNK_DEPTH + CHUNK_DEPTH / 2);
         
         // Radius of a sphere that encloses a 16x256x16 cuboid
         float radius = sqrt(8.0f*8.0f + 128.0f*128.0f + 8.0f*8.0f);

@@ -108,6 +108,8 @@ uint8_t Chunk::getFaceFlags(glm::vec3 pos) const {
 }
 
 
+
+
 Voxel* Chunk::getVoxel(const glm::vec3& pos) const {
     unsigned int index = coordsToIndex(pos);
     if (index < voxels.size()) {

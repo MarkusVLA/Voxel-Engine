@@ -97,7 +97,7 @@ std::vector<float> Voxel::getVertexData(const glm::vec3& offset, uint8_t faceFla
 
     if (faceFlags & FACE_DIAGONAL_2) {
         vertices.insert(vertices.end(), {
-            // Bottom-right to top-left diagonal (corrected)
+            // Bottom-right to top-left diagonal 
             offsetPosition.x + 0.5f, offsetPosition.y - 0.5f, offsetPosition.z - 0.5f,  0.0f, 0.0f,  -1.0f, 1.0f, 1.0f, static_cast<float>(type),
             offsetPosition.x - 0.5f, offsetPosition.y - 0.5f, offsetPosition.z + 0.5f,  1.0f, 0.0f,  -1.0f, 1.0f, 1.0f, static_cast<float>(type),
             offsetPosition.x - 0.5f, offsetPosition.y + 0.5f, offsetPosition.z + 0.5f,  1.0f, 1.0f,  -1.0f, 1.0f, 1.0f, static_cast<float>(type),

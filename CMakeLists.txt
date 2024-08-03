@@ -42,12 +42,11 @@ target_include_directories(imgui PUBLIC
     libs/imgui
     libs/imgui/backends
     ${OPENGL_INCLUDE_DIR}
-    ${GLFW_INCLUDE_DIRS}
 )
 
 target_link_libraries(imgui PUBLIC 
     ${OPENGL_gl_LIBRARY}
-    glfw
+    
 )
 
 include_directories(${OPENGL_INCLUDE_DIR})

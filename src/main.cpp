@@ -16,7 +16,7 @@ int main() {
     std::cout << "Running in debug mode," << std::endl;
     #endif
 
-    Window window(1000, 600, "OpenGL Window");
+    Window window(WINDO_WIDTH, WINDOW_HEIGHT, "OpenGL Window");
     Camera camera(glm::vec3(0.0f, 128.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, 0.0f);
     InputListener::setCamera(&camera);
     InputListener::setWindow(&window);

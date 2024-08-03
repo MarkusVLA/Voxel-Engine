@@ -12,9 +12,15 @@ Renderer::Renderer()
     : shouldExit(false), textureLoaded(false), objectShader(nullptr), skyboxShader(nullptr), waterShader(nullptr) {
     initOpenGL();
     camera = nullptr;
-    projection = glm::perspective(glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 500.0f);
-    lightDir = glm::normalize(glm::vec3(1.0f, 0.5f, 0.3f));
+    projection = glm::perspective(
+
+        glm::radians(45.0f), 
+        WINDO_WIDTH / WINDOW_HEIGHT, 
+        RENDERER_NEAR_PLANE_DISTANCE, 
+        RENDERER_FAR_PLANE_DISTANCE
+    );
 }
+
 
 Renderer::~Renderer() {
     for (auto& [chunkPos, mesh] : chunkMeshes) {
@@ -39,12 +45,12 @@ void Renderer::initOpenGL() {
     glfwSwapInterval(0);
     glGenVertexArrays(1, &skyboxVAO);
     glGenBuffers(1, &skyboxVBO);
-
     GLenum err = glGetError();
     if (err != GL_NO_ERROR) {
         std::cerr << "OpenGL error after initialization: " << err << std::endl;
     }
 }
+
 
 void Renderer::initShaders() {
     try {
@@ -262,7 +268,7 @@ void Renderer::draw() {
     if (skyboxShader) {
         glDepthFunc(GL_LEQUAL);
         skyboxShader->use();
-        glm::mat4 skyboxView = glm::mat4(glm::mat3(view)); // Remove translation
+        glm::mat4 skyboxView = glm::mat4(glm::mat3(view)); 
         skyboxShader->setMat4("view", skyboxView);
         skyboxShader->setMat4("projection", projection);
         skyboxShader->setFloat("time", static_cast<float>(glfwGetTime()));

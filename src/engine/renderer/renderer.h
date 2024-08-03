@@ -58,11 +58,6 @@ private:
         std::vector<unsigned int> waterIndices;
     };
 
-    struct TransparentChunk {
-        glm::ivec2 chunkPos;
-        ChunkMesh mesh;
-        float distance;
-    };
 
     std::unordered_map<glm::ivec2, ChunkMesh, IVec2Hash> chunkMeshes;
     unsigned int skyboxVAO, skyboxVBO;

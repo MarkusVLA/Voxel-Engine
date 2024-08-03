@@ -7,8 +7,8 @@
 
 class Voxel {
 public:
-    Voxel(glm::vec3 position, int type, bool isXShaped = false);
 
+    Voxel(glm::vec3 position, int type, bool isXShaped = false);
     glm::vec3 getPosition() const;
     int getType() const;
     bool getIsXShaped() const;
@@ -19,13 +19,12 @@ public:
 private:
     glm::vec3 position;
     int type;
-    int translucent;
+    bool translucent;
     bool isXShaped;
 };
 
-
-
 enum FaceFlags {
+
     FACE_FRONT = 1 << 0,
     FACE_BACK = 1 << 1,
     FACE_LEFT = 1 << 2,
@@ -34,6 +33,7 @@ enum FaceFlags {
     FACE_BOTTOM = 1 << 5,
     FACE_DIAGONAL_1 = 1 << 6,
     FACE_DIAGONAL_2 = 1 << 7
+
 };
 
 #endif // VOXEL_H

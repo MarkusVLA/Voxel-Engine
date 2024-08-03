@@ -37,10 +37,9 @@ void main() {
 
     vec3 norm = normalize(Normal);
     vec3 lightDirection = normalize(lightDir);
-
     float diff = max(dot(norm, lightDirection), 0.0);
-    vec3 diffuse = diff * lightColor;
 
+    vec3 diffuse = diff * lightColor;
     vec3 ambient = ambientStrength * lightColor;
 
     vec3 lighting = ambient + diffuse;
