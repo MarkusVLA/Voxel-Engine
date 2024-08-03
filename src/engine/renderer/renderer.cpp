@@ -250,10 +250,10 @@ void Renderer::draw() {
         }
     }
 
-    // Render water objects
     if (waterShader) {
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glDepthMask(GL_FALSE);  // Disable depth writing for transparent objects
         waterShader->use();
         setupShaderUniforms(waterShader, view, projection);
 
@@ -263,7 +263,9 @@ void Renderer::draw() {
             }
         }
 
+        glDepthMask(GL_TRUE);   // Re-enable depth writing
         glDisable(GL_BLEND);
+        glUseProgram(0);  // Unbind shader program
     }
 
     // Render skybox last
