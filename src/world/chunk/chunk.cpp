@@ -46,7 +46,7 @@ void Chunk::addVoxelMesh(Voxel* voxel, const glm::vec3& offset, uint8_t faceFlag
                          std::vector<float>& vertices, std::vector<unsigned int>& indices,
                          unsigned int& baseIndex) const {
     // Get vertex data
-    std::vector<float> voxelVertices = voxel->getVertexData(offset, faceFlags);
+    std::vector<float> voxelVertices = voxel->getVertexData(offset, faceFlags, 1.0f);
     vertices.insert(vertices.end(), voxelVertices.begin(), voxelVertices.end());
 
     // Get index data

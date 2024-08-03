@@ -13,7 +13,7 @@ public:
     int getType() const;
     bool getIsXShaped() const;
     bool isTranslucent() const;
-    std::vector<float> getVertexData(const glm::vec3& offset, uint8_t faceFlags) const;
+    std::vector<float> getVertexData(const glm::vec3& offset, uint8_t faceFlags, float ao) const;
     std::vector<unsigned int> getIndexData(unsigned int baseIndex, uint8_t faceFlags) const;
 
 private:

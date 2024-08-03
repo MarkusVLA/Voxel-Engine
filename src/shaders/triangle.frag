@@ -21,6 +21,8 @@ out vec4 FragColor;
 in vec2 TexCoord;
 in vec3 Normal;
 in float FogDepth;
+in float VoxelType;
+in float AO;
 
 uniform sampler2D texture1;
 uniform vec3 fogColor;
@@ -28,7 +30,6 @@ uniform float fogDensity;
 uniform vec3 lightDir;
 uniform vec3 lightColor;
 uniform float ambientStrength;
-uniform int aVoxelType;
 
 void main() {
     vec4 texColor = texture(texture1, TexCoord);
@@ -39,27 +40,12 @@ void main() {
 
     vec3 lightDirection = normalize(lightDir);
     float diff = max(dot(norm, lightDirection), 0.0);
-    
-    diff = smoothstep(0.0, 1.0, diff);
 
     vec3 diffuse = diff * lightColor;
-    vec3 ambient = ambientStrength * lightColor;
+    vec3 ambient = ambientStrength * lightColor * AO;
     vec3 lighting = ambient + diffuse;
 
     vec3 result = lighting * texColor.rgb;
-
-    switch (aVoxelType) {
-        case GRASS:
-            break;
-        case WATER:
-            break;
-        case STONE:
-            break;
-        case DIRT:
-            break;
-        default:
-            break;
-    }
 
     float fogFactor = 1.0 - exp(-fogDensity * FogDepth);
     fogFactor = clamp(fogFactor, 0.0, 1.0);
