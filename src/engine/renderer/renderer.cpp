@@ -9,7 +9,7 @@
 
 
 Renderer::Renderer() 
-    : shouldExit(false), textureLoaded(false), objectShader(nullptr), skyboxShader(nullptr), waterShader(nullptr) {
+    : shouldExit(false), textureLoaded(false), objectShader(nullptr), skyboxShader(nullptr) {
     initOpenGL();
     camera = nullptr;
     projection = glm::perspective(
@@ -35,7 +35,6 @@ Renderer::~Renderer() {
     glDeleteBuffers(1, &skyboxVBO);
     delete objectShader;
     delete skyboxShader;
-    delete waterShader;
 
 }
 
@@ -57,7 +56,6 @@ void Renderer::initShaders() {
     try {
         objectShader = new Shader("../src/shaders/triangle.vert", "../src/shaders/triangle.frag");
         skyboxShader = new Shader("../src/shaders/skybox.vert", "../src/shaders/skybox.frag");
-        waterShader = new Shader("../src/shaders/water.vert", "../src/shaders/water.frag");
     } catch (const std::exception& e) {
         std::cerr << "Shader compilation failed: " << e.what() << std::endl;
         throw;
@@ -237,7 +235,7 @@ void Renderer::draw() {
 
     std::unique_lock<std::mutex> lock(chunkMutex);
 
-    // Render solid objects
+    // Render voxels
     if (objectShader) {
         objectShader->use();
         setupShaderUniforms(objectShader, view, projection);
@@ -247,22 +245,17 @@ void Renderer::draw() {
                 renderChunk(objectShader, mesh.solidVAO, mesh.solidIndexCount, chunkPos);
             }
         }
-    }
-
-    if (waterShader) {
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        waterShader->use();
-        setupShaderUniforms(waterShader, view, projection);
-
         for (const auto& [chunkPos, mesh] : chunkMeshes) {
             if (frustum.isChunkVisible(chunkPos) && mesh.waterIndexCount > 0) {
-                renderChunk(waterShader, mesh.waterVAO, mesh.waterIndexCount, chunkPos);
+                renderChunk(objectShader, mesh.waterVAO, mesh.waterIndexCount, chunkPos);
             }
         }
         glDisable(GL_BLEND);
-        glUseProgram(0);  // Unbind shader program
+        glUseProgram(0); 
     }
+
 
     // Render skybox last
     if (skyboxShader) {

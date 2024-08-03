@@ -28,7 +28,7 @@ uniform float fogDensity;
 uniform vec3 lightDir;
 uniform vec3 lightColor;
 uniform float ambientStrength;
-uniform int aVoxelType; 
+uniform int aVoxelType;
 
 void main() {
     vec4 texColor = texture(texture1, TexCoord);
@@ -36,27 +36,27 @@ void main() {
         discard;
 
     vec3 norm = normalize(Normal);
+
     vec3 lightDirection = normalize(lightDir);
     float diff = max(dot(norm, lightDirection), 0.0);
+    
+    diff = smoothstep(0.0, 1.0, diff);
 
     vec3 diffuse = diff * lightColor;
     vec3 ambient = ambientStrength * lightColor;
-
     vec3 lighting = ambient + diffuse;
-    vec3 result = lighting * texColor.rgb;
 
+    vec3 result = lighting * texColor.rgb;
 
     switch (aVoxelType) {
         case GRASS:
             break;
-
+        case WATER:
+            break;
         case STONE:
             break;
-
         case DIRT:
-
             break;
-
         default:
             break;
     }

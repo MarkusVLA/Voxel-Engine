@@ -1,8 +1,8 @@
 #include "voxel.h"
 
-Voxel::Voxel(glm::vec3 position, int type, bool isXShaped) : position(position), type(type), isXShaped(isXShaped) {
-    if (type == WATER) translucent = true;
-    else translucent = false;
+Voxel::Voxel(glm::vec3 position, int type, bool isXShaped) 
+    : position(position), type(type), isXShaped(isXShaped), translucent(type == WATER ? true : false) {
+
 }
 
 glm::vec3 Voxel::getPosition() const {
