@@ -11,6 +11,11 @@
 #include "global.h"
 
 int main() {
+
+    #ifdef DEBUG_MODE
+    std::cout << "Running in debug mode," << std::endl;
+    #endif
+
     Window window(1000, 600, "OpenGL Window");
     Camera camera(glm::vec3(0.0f, 128.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, 0.0f);
     InputListener::setCamera(&camera);
@@ -22,7 +27,7 @@ int main() {
     int chunkDepth = CHUNK_DEPTH;
     int viewDistance = 16;
 
-    
+
     ChunkManager chunkManager(chunkWidth, chunkHeight, chunkDepth, viewDistance);
     InputListener::setChunkManager(&chunkManager);
 

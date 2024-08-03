@@ -7,6 +7,7 @@ layout (location = 3) in float aVoxelType;
 out vec2 TexCoord;
 out vec3 Normal;
 out float FogDepth;
+out float VoxelType; 
 
 uniform mat4 view;
 uniform mat4 projection;
@@ -17,6 +18,7 @@ void main()
     gl_Position = projection * viewPos;
     
     FogDepth = length(viewPos.xyz);
+    VoxelType = aVoxelType; // Pass the voxel type
 
     float texSize = 1.0 / 16.0;
     vec2 baseCoord = vec2(mod(aVoxelType, 16.0), floor(aVoxelType / 16.0)) * texSize;
@@ -24,6 +26,5 @@ void main()
     vec2 flippedTexCoord = vec2(aTexCoord.x, 1.0 - aTexCoord.y);
     
     TexCoord = baseCoord + flippedTexCoord * texSize;
-
     Normal = aNormal;
 }
