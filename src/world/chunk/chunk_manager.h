@@ -14,9 +14,15 @@
 #include "../../utils/hash.h"
 #include "../../utils/thread_safe_queue.h"
 
+class Chunk;
 
-
-class Chunk; 
+enum class ChunkGenerationState {
+    QUEUED,
+    GENERATING,
+    GENERATED,
+    MESHING,
+    MESHED
+};
 
 class ChunkManager {
 public:
@@ -26,6 +32,7 @@ public:
     std::shared_ptr<Chunk> getChunk(const glm::ivec2& chunkPos);
     ThreadSafeQueue<std::tuple<glm::ivec2, std::vector<float>, std::vector<unsigned int>, std::vector<float>, std::vector<unsigned int>>>& getRenderQueue();
     int getLoadedChunksCount() const;
+    void updateChunks();
 
 private:
     struct ChunkTask {
@@ -40,6 +47,7 @@ private:
     int viewDistance;
     glm::vec3 playerPosition;
     std::unordered_map<glm::ivec2, std::shared_ptr<Chunk>, IVec2Hash> chunks;
+    std::unordered_map<glm::ivec2, ChunkGenerationState, IVec2Hash> chunkStates;
     std::vector<std::thread> workers;
     std::mutex chunksMutex;
     std::atomic_bool running;

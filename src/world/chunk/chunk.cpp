@@ -3,7 +3,8 @@
 
 
 Chunk::Chunk(int width, int height, int depth, glm::vec2 index, ChunkManager* manager)
-    : width(width), height(height), depth(depth), index_(index), manager(manager), terrainGenerator(width, height, depth, index) {
+    : width(width), height(height), depth(depth), index_(index), manager(manager), 
+      terrainGenerator(width, height, depth, index) {
     std::srand(static_cast<unsigned>(std::time(0)));
     terrainGenerator.generateTerrain(voxels);
 }
@@ -61,54 +62,83 @@ uint8_t Chunk::getFaceFlags(glm::vec3 pos) const {
     Voxel* voxel = getVoxel(pos);
 
     if (voxel->getIsXShaped()) {
-        flags |= FACE_DIAGONAL_1 | FACE_DIAGONAL_2;
+        return FACE_DIAGONAL_1 | FACE_DIAGONAL_2;
     }
-    else if (voxel->getType() == WATER) {
-        flags |= (pos.y == height - 1 || getVoxel({pos.x, pos.y + 1, pos.z}) == nullptr || getVoxel({pos.x, pos.y + 1, pos.z})->getType() != WATER) ? FACE_TOP : 0;
-    } 
-    else {
-        // Check front face
-        if (pos.z == depth - 1) {
-            std::shared_ptr<Chunk> frontChunk = manager->getChunk(index_ + glm::vec2(0, 1));
-            flags |= (frontChunk == nullptr || frontChunk->getVoxel({pos.x, pos.y, 0}) == nullptr || frontChunk->getVoxel({pos.x, pos.y, 0})->getType() == WATER || frontChunk->getVoxel({pos.x, pos.y, 0})->getIsXShaped()) ? FACE_FRONT : 0;
-        } else {
-            flags |= (getVoxel({pos.x, pos.y, pos.z + 1}) == nullptr || getVoxel({pos.x, pos.y, pos.z + 1})->getType() == WATER || getVoxel({pos.x, pos.y, pos.z + 1})->getIsXShaped()) ? FACE_FRONT : 0;
-        }
 
-        // Check back face
-        if (pos.z == 0) {
-            std::shared_ptr<Chunk> backChunk = manager->getChunk(index_ + glm::vec2(0, -1));
-            flags |= (backChunk == nullptr || backChunk->getVoxel({pos.x, pos.y, depth - 1}) == nullptr || backChunk->getVoxel({pos.x, pos.y, depth - 1})->getType() == WATER || backChunk->getVoxel({pos.x, pos.y, depth - 1})->getIsXShaped()) ? FACE_BACK : 0;
-        } else {
-            flags |= (getVoxel({pos.x, pos.y, pos.z - 1}) == nullptr || getVoxel({pos.x, pos.y, pos.z - 1})->getType() == WATER || getVoxel({pos.x, pos.y, pos.z - 1})->getIsXShaped()) ? FACE_BACK : 0;
-        }
-
-        // Check left face
-        if (pos.x == 0) {
-            std::shared_ptr<Chunk> leftChunk = manager->getChunk(index_ + glm::vec2(-1, 0));
-            flags |= (leftChunk == nullptr || leftChunk->getVoxel({width - 1, pos.y, pos.z}) == nullptr || leftChunk->getVoxel({width - 1, pos.y, pos.z})->getType() == WATER || leftChunk->getVoxel({width - 1, pos.y, pos.z})->getIsXShaped()) ? FACE_LEFT : 0;
-        } else {
-            flags |= (getVoxel({pos.x - 1, pos.y, pos.z}) == nullptr || getVoxel({pos.x - 1, pos.y, pos.z})->getType() == WATER || getVoxel({pos.x - 1, pos.y, pos.z})->getIsXShaped()) ? FACE_LEFT : 0;
-        }
-
-        // Check right face
-        if (pos.x == width - 1) {
-            std::shared_ptr<Chunk> rightChunk = manager->getChunk(index_ + glm::vec2(1, 0));
-            flags |= (rightChunk == nullptr || rightChunk->getVoxel({0, pos.y, pos.z}) == nullptr || rightChunk->getVoxel({0, pos.y, pos.z})->getType() == WATER || rightChunk->getVoxel({0, pos.y, pos.z})->getIsXShaped()) ? FACE_RIGHT : 0;
-        } else {
-            flags |= (getVoxel({pos.x + 1, pos.y, pos.z}) == nullptr || getVoxel({pos.x + 1, pos.y, pos.z})->getType() == WATER || getVoxel({pos.x + 1, pos.y, pos.z})->getIsXShaped()) ? FACE_RIGHT : 0;
-        }
-
-        // Top and bottom faces remain the same as they don't cross chunk boundaries
-        flags |= (pos.y == height - 1 || getVoxel({pos.x, pos.y + 1, pos.z}) == nullptr || getVoxel({pos.x, pos.y + 1, pos.z})->getType() == WATER || getVoxel({pos.x, pos.y + 1, pos.z})->getIsXShaped()) ? FACE_TOP : 0;
-        flags |= (pos.y == 0 || getVoxel({pos.x, pos.y - 1, pos.z}) == nullptr || getVoxel({pos.x, pos.y - 1, pos.z})->getType() == WATER || getVoxel({pos.x, pos.y - 1, pos.z})->getIsXShaped()) ? FACE_BOTTOM : 0;
+    if (voxel->getType() == WATER) {
+        bool isTopWaterExposed = pos.y == height - 1 || 
+                                 !getVoxel({pos.x, pos.y + 1, pos.z}) || 
+                                 getVoxel({pos.x, pos.y + 1, pos.z})->getType() != WATER;
+        return isTopWaterExposed ? FACE_TOP : 0;
     }
+
+    flags |= checkFace(pos, {0, 0, 1}, FACE_FRONT);
+    flags |= checkFace(pos, {0, 0, -1}, FACE_BACK);
+    flags |= checkFace(pos, {-1, 0, 0}, FACE_LEFT);
+    flags |= checkFace(pos, {1, 0, 0}, FACE_RIGHT);
+    flags |= checkFace(pos, {0, 1, 0}, FACE_TOP);
+    flags |= checkFace(pos, {0, -1, 0}, FACE_BOTTOM);
 
     return flags;
 }
 
+uint8_t Chunk::checkFace(glm::vec3 pos, glm::vec3 offset, uint8_t faceFlag) const {
+    glm::vec3 neighborPos = pos + offset;
+    
+    if (isOutOfBounds(neighborPos)) {
+        std::shared_ptr<Chunk> neighborChunk = getNeighborChunk(neighborPos);
+        if (!neighborChunk) return faceFlag;
+        
+        glm::vec3 wrappedPos = wrapPosition(neighborPos);
+        return shouldRenderFace(neighborChunk->getVoxel(wrappedPos)) ? faceFlag : 0;
+    }
+    
+    return shouldRenderFace(getVoxel(neighborPos)) ? faceFlag : 0;
+}
+
+bool Chunk::isOutOfBounds(glm::vec3 pos) const {
+    return pos.x < 0 || pos.x >= width || 
+           pos.y < 0 || pos.y >= height || 
+           pos.z < 0 || pos.z >= depth;
+}
+
+std::shared_ptr<Chunk> Chunk::getNeighborChunk(glm::vec3 pos) const {
+    glm::vec2 offset(0);
+    if (pos.x < 0) offset.x = -1;
+    else if (pos.x >= width) offset.x = 1;
+    else if (pos.z < 0) offset.y = -1;
+    else if (pos.z >= depth) offset.y = 1;
+    
+    return manager->getChunk(index_ + offset);
+}
+
+glm::vec3 Chunk::wrapPosition(glm::vec3 pos) const {
+    return glm::vec3(
+        static_cast<float>(static_cast<int>(pos.x + width) % width),
+        pos.y,
+        static_cast<float>(static_cast<int>(pos.z + depth) % depth)
+    );
+}
+
+void Chunk::updateMesh() {
+
+    bool allNeighborsReady = true;
+    for (const auto& offset : {glm::vec2(1, 0), glm::vec2(-1, 0), glm::vec2(0, 1), glm::vec2(0, -1)}) {
+        if (!manager->getChunk(index_ + offset)) {
+            allNeighborsReady = false;
+            break;
+        }
+    }
+
+    if (allNeighborsReady) {
+        cachedMesh = getMesh();
+    }
+}
 
 
+bool Chunk::shouldRenderFace(const Voxel* voxel) const {
+    return !voxel || voxel->getType() == WATER || voxel->getIsXShaped();
+}
 
 Voxel* Chunk::getVoxel(const glm::vec3& pos) const {
     unsigned int index = coordsToIndex(pos);

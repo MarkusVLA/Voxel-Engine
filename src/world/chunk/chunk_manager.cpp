@@ -1,6 +1,4 @@
 #include "chunk_manager.h"
-#include "chunk.h"
-
 #include <iostream>
 #include <cmath>
 
@@ -37,7 +35,8 @@ void ChunkManager::unloadChunks() {
     for (auto it = chunks.begin(); it != chunks.end();) {
         glm::ivec2 chunkPos = it->first;
         if (!isChunkInLoadDistance(chunkPos, playerChunk)) {
-            renderQueue.push({chunkPos, {}, {}, {}, {}});  
+            renderQueue.push({chunkPos, {}, {}, {}, {}});
+            chunkStates.erase(chunkPos);
             it = chunks.erase(it);
         } else {
             ++it;
@@ -90,19 +89,21 @@ void ChunkManager::expandLoadedArea(const glm::ivec2& newCenterChunk) {
     int end_x = newCenterChunk.x + viewDistance;
     int start_z = newCenterChunk.y - viewDistance;
     int end_z = newCenterChunk.y + viewDistance;
+
     for (int x = start_x; x <= end_x; ++x) {
         for (int z = start_z; z <= end_z; ++z) {
             glm::ivec2 chunkPos(x, z);
             std::lock_guard<std::mutex> lock(chunksMutex);
             if (chunks.find(chunkPos) == chunks.end()) {
+                chunkStates[chunkPos] = ChunkGenerationState::QUEUED;
                 taskQueue.push([this, chunkPos] {
+                    chunkStates[chunkPos] = ChunkGenerationState::GENERATING;
                     auto chunk = std::make_shared<Chunk>(chunkWidth, chunkHeight, chunkDepth, chunkPos, this);
-                    auto [solidVertices, solidIndices, waterVertices, waterIndices] = chunk->getMesh();
                     {
                         std::lock_guard<std::mutex> lock(chunksMutex);
                         chunks[chunkPos] = chunk;
+                        chunkStates[chunkPos] = ChunkGenerationState::GENERATED;
                     }
-                    renderQueue.push({chunkPos, std::move(solidVertices), std::move(solidIndices), std::move(waterVertices), std::move(waterIndices)});
                 });
             }
         }
@@ -116,4 +117,29 @@ bool ChunkManager::isChunkInLoadDistance(const glm::ivec2& chunkPos, const glm::
 
 int ChunkManager::getLoadedChunksCount() const {
     return chunks.size();
+}
+
+void ChunkManager::updateChunks() {
+    std::lock_guard<std::mutex> lock(chunksMutex);
+    for (auto& [chunkPos, chunk] : chunks) {
+        if (chunkStates[chunkPos] == ChunkGenerationState::GENERATED) {
+            bool allNeighborsGenerated = true;
+            for (const auto& offset : {glm::ivec2(1, 0), glm::ivec2(-1, 0), glm::ivec2(0, 1), glm::ivec2(0, -1)}) {
+                glm::ivec2 neighborPos = chunkPos + offset;
+                if (chunks.find(neighborPos) == chunks.end() || chunkStates[neighborPos] == ChunkGenerationState::QUEUED) {
+                    allNeighborsGenerated = false;
+                    break;
+                }
+            }
+            if (allNeighborsGenerated) {
+                chunkStates[chunkPos] = ChunkGenerationState::MESHING;
+                taskQueue.push([this, chunkPos, chunk] {
+                    auto [solidVertices, solidIndices, waterVertices, waterIndices] = chunk->getMesh();
+                    renderQueue.push({chunkPos, std::move(solidVertices), std::move(solidIndices), std::move(waterVertices), std::move(waterIndices)});
+                    std::lock_guard<std::mutex> lock(chunksMutex);
+                    chunkStates[chunkPos] = ChunkGenerationState::MESHED;
+                });
+            }
+        }
+    }
 }

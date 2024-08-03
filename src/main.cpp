@@ -67,6 +67,8 @@ int main() {
         }
 
         std::tuple<glm::ivec2, std::vector<float>, std::vector<unsigned int>, std::vector<float>, std::vector<unsigned int>> item;
+        chunkManager.updateChunks();
+
         while (chunkManager.getRenderQueue().tryPop(item)) {
             const auto& [chunkPos, solidVertices, solidIndices, waterVertices, waterIndices] = item;
             if ((!solidVertices.empty() && !solidIndices.empty()) || (!waterVertices.empty() && !waterIndices.empty())) {
