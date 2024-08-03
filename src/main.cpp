@@ -25,7 +25,7 @@ int main() {
     int chunkWidth = CHUNK_WIDTH;
     int chunkHeight = CHUNK_HEIGHT;
     int chunkDepth = CHUNK_DEPTH;
-    int viewDistance = 16;
+    int viewDistance = 6;
 
 
     ChunkManager chunkManager(chunkWidth, chunkHeight, chunkDepth, viewDistance);
