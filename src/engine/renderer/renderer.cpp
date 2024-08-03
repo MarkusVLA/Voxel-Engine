@@ -1,10 +1,12 @@
 #include "renderer.h"
 #include "texture_loader.h"
 #include <iostream>
-
+#include "frustum.hpp"
 #include "renderer.h"
 #include "texture_loader.h"
 #include <iostream>
+#include "../../global.h"
+
 
 Renderer::Renderer() 
     : shouldExit(false), textureLoaded(false), objectShader(nullptr), skyboxShader(nullptr), waterShader(nullptr) {
@@ -215,74 +217,68 @@ void Renderer::loadTexture(const std::string& path) {
 }
 
 void Renderer::draw() {
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glDepthFunc(GL_LEQUAL);
-    if (skyboxShader && camera) {
-        skyboxShader->use();
-        glm::mat4 view = glm::mat4(glm::mat3(camera->getViewMatrix()));
-        skyboxShader->setMat4("view", view);
-        skyboxShader->setMat4("projection", projection);
-        skyboxShader->setFloat("time", static_cast<float>(glfwGetTime()));
-        glBindVertexArray(skyboxVAO);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
-        glBindVertexArray(0);
-    }
-
     if (!textureLoaded || !camera) {
         return;
     }
+
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
     glm::mat4 view = camera->getViewMatrix();
+
+    Frustum frustum(projection * view);
+
     std::unique_lock<std::mutex> lock(chunkMutex);
 
+    // Render solid objects
     if (objectShader) {
-        glDisable(GL_BLEND);  
+        glDisable(GL_BLEND);
         objectShader->use();
         setupShaderUniforms(objectShader, view, projection);
 
         for (const auto& [chunkPos, mesh] : chunkMeshes) {
-            renderChunk(objectShader, mesh.solidVAO, mesh.solidIndexCount, chunkPos);
+            if (frustum.isChunkVisible(chunkPos)) {
+                renderChunk(objectShader, mesh.solidVAO, mesh.solidIndexCount, chunkPos);
+            }
         }
     }
 
-    // Collect and sort transparent chunks
-    struct TransparentChunk {
-        glm::ivec2 chunkPos;
-        ChunkMesh mesh;
-        float distance;
-    };
-    
-    std::vector<TransparentChunk> transparentChunks;
-    for (const auto& [chunkPos, mesh] : chunkMeshes) {
-        if (mesh.waterIndexCount > 0) { 
-            glm::vec3 chunkCenter = glm::vec3(chunkPos.x * 16 + 8, 0, chunkPos.y * 16 + 8);
-            float distance = glm::distance(camera->getPosition(), chunkCenter);
-            transparentChunks.push_back({chunkPos, mesh, distance});
-        }
-    }
-
-    std::sort(transparentChunks.begin(), transparentChunks.end(),
-        [](const TransparentChunk& a, const TransparentChunk& b) {
-            return a.distance > b.distance; 
-        });
-
-
+    // Render water objects
     if (waterShader) {
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        waterShader->use();
+        setupShaderUniforms(waterShader, view, projection);
 
-        for (const auto& chunk : transparentChunks) {
-            renderChunk(waterShader, chunk.mesh.waterVAO, chunk.mesh.waterIndexCount, chunk.chunkPos);
+        for (const auto& [chunkPos, mesh] : chunkMeshes) {
+            if (frustum.isChunkVisible(chunkPos) && mesh.waterIndexCount > 0) {
+                renderChunk(waterShader, mesh.waterVAO, mesh.waterIndexCount, chunkPos);
+            }
         }
 
-        glDepthMask(GL_TRUE); 
         glDisable(GL_BLEND);
     }
 
+    // Render skybox last
+    if (skyboxShader) {
+        glDepthFunc(GL_LEQUAL);
+        skyboxShader->use();
+        glm::mat4 skyboxView = glm::mat4(glm::mat3(view)); // Remove translation
+        skyboxShader->setMat4("view", skyboxView);
+        skyboxShader->setMat4("projection", projection);
+        skyboxShader->setFloat("time", static_cast<float>(glfwGetTime()));
+        glBindVertexArray(skyboxVAO);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+        glDepthFunc(GL_LESS);
+    }
+
     glBindVertexArray(0);
+
+    #ifdef DEBUG_MODE
     GLenum err;
     while ((err = glGetError()) != GL_NO_ERROR) {
         std::cerr << "OpenGL error: " << err << std::endl;
     }
+    #endif
 }
 
 
@@ -292,18 +288,16 @@ void Renderer::setupShaderUniforms(Shader* shader, const glm::mat4& view, glm::m
     glBindTexture(GL_TEXTURE_2D, textureID);
     shader->setVec3("lightDir", lightDir);
     shader->setVec3("cameraPos", camera->getPosition());
-    shader->setVec3("lightColor", glm::vec3(1.0f, 0.8f, 0.6f));
+    shader->setVec3("lightColor", glm::vec3(1.0f, 0.9f, 0.8f));
     shader->setFloat("ambientStrength", 0.2f);
     shader->setVec3("fogColor", glm::vec3(0.7f, 0.8f, 0.9f));
-    shader->setFloat("fogDensity", 0.003f);
+    shader->setFloat("fogDensity", 0.002f);
     shader->setFloat("time", static_cast<float>(glfwGetTime())); 
 }
 
 
 
 void Renderer::renderChunk(Shader* shader, GLuint vao, int indexCount, const glm::ivec2& chunkPos) {
-    glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(chunkPos.x * 16, 0, chunkPos.y * 16));
-    shader->setMat4("model", model);
     glBindVertexArray(vao);
     glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
 }

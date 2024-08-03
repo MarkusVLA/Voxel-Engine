@@ -8,6 +8,7 @@
 #include "world/chunk/chunk_manager.h"
 #include "engine/window/GUI/gui.h"
 #include <iostream>
+#include "global.h"
 
 int main() {
     Window window(1000, 600, "OpenGL Window");
@@ -16,10 +17,12 @@ int main() {
     InputListener::setWindow(&window);
     SkyBox skyBox;
 
-    int chunkWidth = 16;
-    int chunkHeight = 256;
-    int chunkDepth = 16;
+    int chunkWidth = CHUNK_WIDTH;
+    int chunkHeight = CHUNK_HEIGHT;
+    int chunkDepth = CHUNK_DEPTH;
     int viewDistance = 16;
+
+    
     ChunkManager chunkManager(chunkWidth, chunkHeight, chunkDepth, viewDistance);
     InputListener::setChunkManager(&chunkManager);
 
