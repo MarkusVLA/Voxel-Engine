@@ -221,26 +221,25 @@ void Renderer::loadTexture(const std::string& path) {
     textureID = TextureLoader::loadTextureAtlas(path);
     textureLoaded = true;
 }
-
 void Renderer::draw() {
     if (!textureLoaded || !camera) {
         return;
     }
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
     glm::mat4 view = camera->getViewMatrix();
-
     Frustum frustum(projection * view);
-
     std::unique_lock<std::mutex> lock(chunkMutex);
 
     // Render solid objects
     if (objectShader) {
         glDisable(GL_BLEND);
+        glEnable(GL_DEPTH_TEST);
+        glDepthMask(GL_TRUE);
+        glDepthFunc(GL_LESS);
+        
         objectShader->use();
         setupShaderUniforms(objectShader, view, projection);
-
         for (const auto& [chunkPos, mesh] : chunkMeshes) {
             if (frustum.isChunkVisible(chunkPos)) {
                 renderChunk(objectShader, mesh.solidVAO, mesh.solidIndexCount, chunkPos);
@@ -252,15 +251,20 @@ void Renderer::draw() {
     if (waterShader) {
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glEnable(GL_DEPTH_TEST);
+        glDepthMask(GL_FALSE);  // Disable depth writing for transparent objects
+        glDepthFunc(GL_LEQUAL); // Change depth function for transparent objects
+        
         waterShader->use();
         setupShaderUniforms(waterShader, view, projection);
-
         for (const auto& [chunkPos, mesh] : chunkMeshes) {
             if (frustum.isChunkVisible(chunkPos) && mesh.waterIndexCount > 0) {
                 renderChunk(waterShader, mesh.waterVAO, mesh.waterIndexCount, chunkPos);
             }
         }
-
+        
+        glDepthMask(GL_TRUE);   // Re-enable depth writing
+        glDepthFunc(GL_LESS);   // Reset depth function
         glDisable(GL_BLEND);
     }
 
@@ -268,7 +272,7 @@ void Renderer::draw() {
     if (skyboxShader) {
         glDepthFunc(GL_LEQUAL);
         skyboxShader->use();
-        glm::mat4 skyboxView = glm::mat4(glm::mat3(view)); 
+        glm::mat4 skyboxView = glm::mat4(glm::mat3(view));
         skyboxShader->setMat4("view", skyboxView);
         skyboxShader->setMat4("projection", projection);
         skyboxShader->setFloat("time", static_cast<float>(glfwGetTime()));
@@ -286,7 +290,6 @@ void Renderer::draw() {
     }
     #endif
 }
-
 
 void Renderer::setupShaderUniforms(Shader* shader, const glm::mat4& view, glm::mat4& projection) {
     shader->setMat4("view", view);
