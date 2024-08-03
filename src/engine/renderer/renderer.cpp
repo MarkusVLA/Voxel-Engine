@@ -230,17 +230,11 @@ void Renderer::draw() {
     }
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-    glEnable(GL_BLEND);
-
     glm::mat4 view = camera->getViewMatrix();
-
     Frustum frustum(projection * view);
-
     std::unique_lock<std::mutex> lock(chunkMutex);
 
-    // Render solid objects
     if (objectShader) {
-        glDisable(GL_BLEND);
         objectShader->use();
         setupShaderUniforms(objectShader, view, projection);
 
@@ -249,10 +243,10 @@ void Renderer::draw() {
                 renderChunk(objectShader, mesh.solidVAO, mesh.solidIndexCount, chunkPos);
             }
         }
+        glUseProgram(0);  
     }
 
     if (waterShader) {
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         waterShader->use();
         setupShaderUniforms(waterShader, view, projection);
 
@@ -262,11 +256,8 @@ void Renderer::draw() {
             }
         }
 
-        glUseProgram(0);  // Unbind shader program
+        glUseProgram(0);  
     }
-
-    glDisable(GL_BLEND);
-
 
     // Render skybox last
     if (skyboxShader) {
