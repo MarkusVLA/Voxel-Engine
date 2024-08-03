@@ -9,12 +9,13 @@
 #include "../../utils/perlin.h"
 #include "../../utils/pop_count.h"
 #include "terrain_generator/terrain_generator.h"
+#include "chunk_manager.h"
 
-
+class ChunkManager;
 
 class Chunk {
 public:
-    Chunk(int width, int height, int depth, glm::vec2 index);
+    Chunk(int width, int height, int depth, glm::vec2 index, ChunkManager* manager);
     ~Chunk();
 
     std::tuple<std::vector<float>, std::vector<unsigned int>,
@@ -36,6 +37,7 @@ private:
     glm::vec2 index_;
     std::vector<Voxel*> voxels;
     TerrainGenerator terrainGenerator;
+    ChunkManager* manager;
 };
 
 #endif // CHUNK_H

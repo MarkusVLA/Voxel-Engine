@@ -1,4 +1,3 @@
-// renderer.cpp
 #include "renderer.h"
 #include "texture_loader.h"
 #include <iostream>
@@ -217,13 +216,13 @@ void Renderer::loadTexture(const std::string& path) {
 
 void Renderer::draw() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
     glDepthFunc(GL_LEQUAL);
     if (skyboxShader && camera) {
         skyboxShader->use();
         glm::mat4 view = glm::mat4(glm::mat3(camera->getViewMatrix()));
         skyboxShader->setMat4("view", view);
         skyboxShader->setMat4("projection", projection);
+        skyboxShader->setFloat("time", static_cast<float>(glfwGetTime()));
         glBindVertexArray(skyboxVAO);
         glDrawArrays(GL_TRIANGLES, 0, 36);
         glBindVertexArray(0);
@@ -236,7 +235,7 @@ void Renderer::draw() {
     std::unique_lock<std::mutex> lock(chunkMutex);
 
     if (objectShader) {
-        glDisable(GL_BLEND);  // Disable blending for solid objects
+        glDisable(GL_BLEND);  
         objectShader->use();
         setupShaderUniforms(objectShader, view, projection);
 
@@ -263,7 +262,7 @@ void Renderer::draw() {
 
     std::sort(transparentChunks.begin(), transparentChunks.end(),
         [](const TransparentChunk& a, const TransparentChunk& b) {
-            return a.distance > b.distance;  // Sort from farthest to nearest
+            return a.distance > b.distance; 
         });
 
 
@@ -275,7 +274,7 @@ void Renderer::draw() {
             renderChunk(waterShader, chunk.mesh.waterVAO, chunk.mesh.waterIndexCount, chunk.chunkPos);
         }
 
-        glDepthMask(GL_TRUE);  // Re-enable depth writing
+        glDepthMask(GL_TRUE); 
         glDisable(GL_BLEND);
     }
 

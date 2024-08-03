@@ -14,6 +14,10 @@
 #include "../../utils/hash.h"
 #include "../../utils/thread_safe_queue.h"
 
+
+
+class Chunk; 
+
 class ChunkManager {
 public:
     ChunkManager(int chunkWidth, int chunkHeight, int chunkDepth, int viewDistance);

@@ -20,7 +20,10 @@ void main()
 
     float texSize = 1.0 / 16.0;
     vec2 baseCoord = vec2(mod(aVoxelType, 16.0), floor(aVoxelType / 16.0)) * texSize;
-    TexCoord = baseCoord + aTexCoord * texSize;
+    
+    vec2 flippedTexCoord = vec2(aTexCoord.x, 1.0 - aTexCoord.y);
+    
+    TexCoord = baseCoord + flippedTexCoord * texSize;
 
     Normal = aNormal;
 }

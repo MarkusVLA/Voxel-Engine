@@ -1,4 +1,6 @@
 #include "chunk_manager.h"
+#include "chunk.h"
+
 #include <iostream>
 #include <cmath>
 
@@ -35,7 +37,7 @@ void ChunkManager::unloadChunks() {
     for (auto it = chunks.begin(); it != chunks.end();) {
         glm::ivec2 chunkPos = it->first;
         if (!isChunkInLoadDistance(chunkPos, playerChunk)) {
-            renderQueue.push({chunkPos, {}, {}, {}, {}});  // Empty vectors for both solid and water meshes
+            renderQueue.push({chunkPos, {}, {}, {}, {}});  
             it = chunks.erase(it);
         } else {
             ++it;
@@ -94,7 +96,7 @@ void ChunkManager::expandLoadedArea(const glm::ivec2& newCenterChunk) {
             std::lock_guard<std::mutex> lock(chunksMutex);
             if (chunks.find(chunkPos) == chunks.end()) {
                 taskQueue.push([this, chunkPos] {
-                    auto chunk = std::make_shared<Chunk>(chunkWidth, chunkHeight, chunkDepth, chunkPos);
+                    auto chunk = std::make_shared<Chunk>(chunkWidth, chunkHeight, chunkDepth, chunkPos, this);
                     auto [solidVertices, solidIndices, waterVertices, waterIndices] = chunk->getMesh();
                     {
                         std::lock_guard<std::mutex> lock(chunksMutex);
