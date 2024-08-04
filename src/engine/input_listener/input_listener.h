@@ -2,25 +2,26 @@
 
 #include <GLFW/glfw3.h>
 #include <chrono>
-#include "../camera/camera.h"
+#include "../../world/player/player.h"
+
 
 class Window;
 class ChunkManager;
 
 class InputListener {
 public:
-    static void setCamera(Camera* cam);
     static void setWindow(Window* win);
     static void setChunkManager(ChunkManager* cm);
-
     static void keyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
     static void cursorPositionCallback(GLFWwindow* window, double xpos, double ypos);
     static void scrollCallback(GLFWwindow* window, double xoffset, double yoffset);
     static void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
     static void update();
+    static void setPlayer(Player* player);
 
 private:
-    static Camera* camera;
+
+    static Player* player;
     static bool firstMouse;
     static float lastX;
     static float lastY;

@@ -75,6 +75,7 @@ add_executable(app
     src/world/skybox.cpp
     src/world/chunk/chunk_manager.cpp
     src/utils/perlin.cpp
+    src/world/player/player.cpp
 )
 
 target_link_libraries(app ${OPENGL_gl_LIBRARY} glm glfw glad freetype imgui)

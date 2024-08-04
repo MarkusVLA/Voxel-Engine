@@ -5,7 +5,6 @@
 #include <GLFW/glfw3.h>
 #include "../input_listener/input_listener.h"
 #include <iostream>
-#include <sys/_types/_time_t.h>
 
 class Window {
 public:

@@ -33,6 +33,8 @@ public:
     ThreadSafeQueue<std::tuple<glm::ivec2, std::vector<float>, std::vector<unsigned int>, std::vector<float>, std::vector<unsigned int>>>& getRenderQueue();
     int getLoadedChunksCount() const;
     void updateChunks();
+    glm::ivec2 worldToChunkCoords(const glm::vec3& worldPos);
+
 
 private:
     struct ChunkTask {
@@ -57,7 +59,6 @@ private:
 
     void loadChunks();
     void unloadChunks();
-    glm::ivec2 worldToChunkCoords(const glm::vec3& worldPos);
     void startWorkers(size_t numWorkers);
     void workerFunction();
     void expandLoadedArea(const glm::ivec2& newCenterChunk);

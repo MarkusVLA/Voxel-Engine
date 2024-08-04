@@ -1,6 +1,5 @@
 // game.h
 #pragma once
-
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include "engine/renderer/renderer.h"
@@ -11,6 +10,7 @@
 #include "world/skybox.h"
 #include "world/chunk/chunk_manager.h"
 #include "engine/window/GUI/gui.h"
+#include "world/player/player.h"
 #include <iostream>
 #include "global.h"
 
@@ -18,17 +18,15 @@ class Game {
 public:
     Game();
     void run();
-
 private:
     void initialize();
-
+    void handleInput(float deltaTime);
     Window window;
-    Camera camera;
+    Player player; // Add this line
     SkyBox skyBox;
     ChunkManager chunkManager;
     Renderer renderer;
     GUI gui;
-
     glm::vec3 lastUpdatePosition;
     double lastFrame;
     int frameCount;

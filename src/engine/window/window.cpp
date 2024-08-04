@@ -1,7 +1,6 @@
 #include <glad/glad.h>
 #include "window.h"
 #include <iostream>
-#include <sys/_types/_time_t.h>
 #include <variant>
 
 Window::Window(int width, int height, const std::string& title): deltaTime(0.0f) {
