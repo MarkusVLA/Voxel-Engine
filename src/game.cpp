@@ -5,7 +5,6 @@ Game::Game()
     : window(WINDO_WIDTH, WINDOW_HEIGHT, "OpenGL Window"),
       camera(glm::vec3(0.0f, 128.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, 0.0f),
       chunkManager(CHUNK_WIDTH, CHUNK_HEIGHT, CHUNK_DEPTH, VIEW_DISTANCE),
-      gui(window.getGLFWwindow()),
       lastUpdatePosition(0.0f, 128.0f, 0.0f),
       lastFrame(0.0),
       frameCount(0),
@@ -13,6 +12,7 @@ Game::Game()
       lastFPSPrintTime(0.0)
 {
     initialize();
+
 }
 
 void Game::initialize() {
@@ -32,6 +32,7 @@ void Game::initialize() {
     renderer.loadTexture("../assets/textures/atlas.png");
     renderer.setSkyboxData(skyBox.GetVertices());
 
+    gui.Init(window.getGLFWwindow()),
     glfwSetWindowUserPointer(window.getGLFWwindow(), &gui);
 }
 

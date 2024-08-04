@@ -4,14 +4,17 @@
 #include <iomanip>
 #include <glm/trigonometric.hpp>
 
-GUI::GUI(GLFWwindow* window) {
+GUI::GUI(){}
+
+
+void GUI::Init(GLFWwindow* window) {
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     ImGui::StyleColorsDark();
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init("#version 330");
-    
+
     azimuth = 45.0f;
     altitude = 20.0f;
 
@@ -126,7 +129,7 @@ glm::vec3 GUI::getLightDirection() {
     // Convert spherical coordinates to Cartesian coordinates
     float azimuthRad = glm::radians(azimuth);
     float altitudeRad = glm::radians(altitude);
-    
+
     float x = glm::cos(altitudeRad) * glm::sin(azimuthRad);
     float y = glm::sin(altitudeRad);
     float z = glm::cos(altitudeRad) * glm::cos(azimuthRad);

@@ -245,14 +245,15 @@ void Renderer::draw() {
     if (objectShader) {
         objectShader->use();
         setupShaderUniforms(objectShader, view, projection);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
         for (const auto& [chunkPos, mesh] : chunkMeshes) {
             if (frustum.isChunkVisible(chunkPos)) {
                 renderChunk(objectShader, mesh.solidVAO, mesh.solidIndexCount, chunkPos);
             }
         }
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
         for (const auto& [chunkPos, mesh] : chunkMeshes) {
             if (frustum.isChunkVisible(chunkPos) && mesh.waterIndexCount > 0) {
                 renderChunk(objectShader, mesh.waterVAO, mesh.waterIndexCount, chunkPos);

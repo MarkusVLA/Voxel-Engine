@@ -10,14 +10,17 @@
 
 class GUI {
 public:
-    GUI(GLFWwindow* window);
+
+    GUI();
+    // GUI(GLFWwindow* window);
+    void Init(GLFWwindow* window);
     ~GUI();
 
     void newFrame();
     void render();
     void displayInfo(float fps, const glm::vec3& playerPos, int viewDistance, int loadedChunks);
     glm::vec3 getLightDirection();
-    void drawCrosshair(); 
+    void drawCrosshair();
 
 private:
     void displayFPS(float fps);

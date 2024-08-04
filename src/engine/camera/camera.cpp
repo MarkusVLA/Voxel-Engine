@@ -3,7 +3,7 @@
 #include <complex.h>
 #include <xlocale/_stdio.h>
 
-// Default camera values
+
 const float YAW = -90.0f;
 const float PITCH = 0.0f;
 const float SPEED = 50.0f;
@@ -105,9 +105,9 @@ void Camera::updateCameraVectors() {
 }
 
 glm::vec3 Camera::getRayDirection() const {
-        glm::vec3 front;
-        front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-        front.y = sin(glm::radians(pitch));
-        front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-        return glm::normalize(front);
-    }
+    glm::vec3 front;
+    front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+    front.y = sin(glm::radians(pitch));
+    front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+    return glm::normalize(front);
+}

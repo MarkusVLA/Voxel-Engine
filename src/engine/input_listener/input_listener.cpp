@@ -1,13 +1,14 @@
 #include "input_listener.h"
 #include "../window/window.h"
 #include "../../world/chunk/chunk_manager.h"
+#include "../../global.h"
 #include "GLFW/glfw3.h"
 #include <iostream>
 
 Camera* InputListener::camera = nullptr;
 bool InputListener::firstMouse = true;
-float InputListener::lastX = 800.0f / 2.0f;
-float InputListener::lastY = 600.0f / 2.0f;
+float InputListener::lastX = WINDO_WIDTH / 2.0f;
+float InputListener::lastY = WINDOW_HEIGHT / 2.0f;
 Window* InputListener::window = nullptr;
 ChunkManager* InputListener::chunkManager = nullptr;
 bool InputListener::keys[1024] = { false };
