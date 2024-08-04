@@ -1,5 +1,3 @@
-#include <ConditionalMacros.h>
-#include <MacTypes.h>
 #include <glad/glad.h>
 #include "window.h"
 #include <iostream>
