@@ -2,15 +2,7 @@
 
 ![Voxel Game Engine](img/img.jpeg)
 
-Voxel Engine is a voxel-based game engine and renderer written in C++ using OpenGL and GLFW. 
-
-## Features
-
-- OpenGL-based rendering pipeline
-- Voxel rendering and chunk management
-- Input handling with GLFW
-- Mathematical operations with GLM
-
+Voxel Engine is a voxel-based game engine and renderer written in C++ using OpenGL
 
 ### Prerequisites
 
@@ -35,16 +27,31 @@ Voxel Engine is a voxel-based game engine and renderer written in C++ using Open
 
 3. **Configure the project** using CMake:
 
+  Mac & Linux:
     ```bash
     cmake ..
     ```
+  Windows:
+  ```bash
+  cmake -DCMAKE_BUILD_TYPE=Release ..
+  ```
+
 
 4. **Build the project**:
-
-    ```bash
-    cmake --build .
-    ```
+  Mac & Linux:
+  ```bash
+  make
+  ```
+  Windows:
+  ```bash
+  cmake --build . --config=Release
+  ```
 
 ### Running the Application
 
-After building the project, you can run the executable from the build directory. On windows you may have to move the .exe to the build directory.
+After building the execuatble, you can run the app from the build directory.
+```bash
+./game/bin/app
+or
+.\game\bin\app.exe
+```
