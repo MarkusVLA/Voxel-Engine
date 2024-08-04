@@ -1,11 +1,17 @@
 #include "chunk_manager.h"
+#include <cstdlib>
 #include <iostream>
 #include <cmath>
 
 ChunkManager::ChunkManager(int chunkWidth, int chunkHeight, int chunkDepth, int viewDistance)
     : chunkWidth(chunkWidth), chunkHeight(chunkHeight), chunkDepth(chunkDepth), viewDistance(viewDistance),
-      running(true), lastLoadedCenterChunk(0, 0) {
+      running(false), lastLoadedCenterChunk(0, 0) {
+}
+
+void ChunkManager::init(unsigned int s){
+    seed = s;
     startWorkers(2);
+    running = true;
 }
 
 ChunkManager::~ChunkManager() {
@@ -98,7 +104,7 @@ void ChunkManager::expandLoadedArea(const glm::ivec2& newCenterChunk) {
                 chunkStates[chunkPos] = ChunkGenerationState::QUEUED;
                 taskQueue.push([this, chunkPos] {
                     chunkStates[chunkPos] = ChunkGenerationState::GENERATING;
-                    auto chunk = std::make_shared<Chunk>(chunkWidth, chunkHeight, chunkDepth, chunkPos, this);
+                    auto chunk = std::make_shared<Chunk>(chunkWidth, chunkHeight, chunkDepth, chunkPos, this, seed);
                     {
                         std::lock_guard<std::mutex> lock(chunksMutex);
                         chunks[chunkPos] = chunk;

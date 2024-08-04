@@ -2,9 +2,9 @@
 #include "chunk_manager.h"
 
 
-Chunk::Chunk(int width, int height, int depth, glm::vec2 index, ChunkManager* manager)
-    : width(width), height(height), depth(depth), index_(index), manager(manager), 
-      terrainGenerator(width, height, depth, index) {
+Chunk::Chunk(int width, int height, int depth, glm::vec2 index, ChunkManager* manager, unsigned int seed)
+    : width(width), height(height), depth(depth), index_(index), manager(manager),
+      terrainGenerator(width, height, depth, index, seed) {
     std::srand(static_cast<unsigned>(std::time(0)));
     terrainGenerator.generateTerrain(voxels);
 }
@@ -66,8 +66,8 @@ uint8_t Chunk::getFaceFlags(glm::vec3 pos) const {
     }
 
     if (voxel->getType() == WATER) {
-        bool isTopWaterExposed = pos.y == height - 1 || 
-                                 !getVoxel({pos.x, pos.y + 1, pos.z}) || 
+        bool isTopWaterExposed = pos.y == height - 1 ||
+                                 !getVoxel({pos.x, pos.y + 1, pos.z}) ||
                                  getVoxel({pos.x, pos.y + 1, pos.z})->getType() != WATER;
         return isTopWaterExposed ? FACE_TOP : 0;
     }
@@ -84,21 +84,21 @@ uint8_t Chunk::getFaceFlags(glm::vec3 pos) const {
 
 uint8_t Chunk::checkFace(glm::vec3 pos, glm::vec3 offset, uint8_t faceFlag) const {
     glm::vec3 neighborPos = pos + offset;
-    
+
     if (isOutOfBounds(neighborPos)) {
         std::shared_ptr<Chunk> neighborChunk = getNeighborChunk(neighborPos);
         if (!neighborChunk) return faceFlag;
-        
+
         glm::vec3 wrappedPos = wrapPosition(neighborPos);
         return shouldRenderFace(neighborChunk->getVoxel(wrappedPos)) ? faceFlag : 0;
     }
-    
+
     return shouldRenderFace(getVoxel(neighborPos)) ? faceFlag : 0;
 }
 
 bool Chunk::isOutOfBounds(glm::vec3 pos) const {
-    return pos.x < 0 || pos.x >= width || 
-           pos.y < 0 || pos.y >= height || 
+    return pos.x < 0 || pos.x >= width ||
+           pos.y < 0 || pos.y >= height ||
            pos.z < 0 || pos.z >= depth;
 }
 
@@ -108,7 +108,7 @@ std::shared_ptr<Chunk> Chunk::getNeighborChunk(glm::vec3 pos) const {
     else if (pos.x >= width) offset.x = 1;
     else if (pos.z < 0) offset.y = -1;
     else if (pos.z >= depth) offset.y = 1;
-    
+
     return manager->getChunk(index_ + offset);
 }
 
@@ -159,8 +159,8 @@ void Chunk::setVoxel(const glm::vec3& pos, VoxelType type) {
 
 unsigned int Chunk::coordsToIndex(glm::vec3 coords) const {
     return static_cast<unsigned int>(
-        coords.x + 
-        coords.y * width + 
+        coords.x +
+        coords.y * width +
         coords.z * width * height
     );
 }

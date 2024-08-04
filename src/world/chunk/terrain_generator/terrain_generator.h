@@ -27,7 +27,7 @@ struct BiomeParams {
 
 class TerrainGenerator {
 public:
-    TerrainGenerator(int width, int height, int depth, glm::vec2 index);
+    TerrainGenerator(int width, int height, int depth, glm::vec2 index, unsigned int seed);
     void generateTerrain(std::vector<Voxel*>& voxels);
 
 private:
@@ -50,4 +50,3 @@ private:
 };
 
 #endif // TERRAIN_GENERATOR_H
-

@@ -32,4 +32,6 @@ private:
     int frameCount;
     float fps;
     double lastFPSPrintTime;
+
+    unsigned int seed;
 };

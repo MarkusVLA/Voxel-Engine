@@ -11,9 +11,9 @@ const std::array<BiomeParams, 5> TerrainGenerator::biomeParameters = {{
     {64, 6, 0.7f, 0.0f}     // DESERT
 }};
 
-TerrainGenerator::TerrainGenerator(int width, int height, int depth, glm::vec2 index)
-    : width(width), height(height), depth(depth), index_(index), perlinNoise() {
-    std::srand(static_cast<unsigned>(std::time(0)));
+TerrainGenerator::TerrainGenerator(int width, int height, int depth, glm::vec2 index, unsigned int seed)
+    : width(width), height(height), depth(depth), index_(index), perlinNoise(seed) {
+    std::srand(seed);
 }
 
 void TerrainGenerator::generateTerrain(std::vector<Voxel*>& voxels) {
@@ -158,30 +158,30 @@ void TerrainGenerator::addSurfaceFeatures(int x, int z, int maxY, BiomeType biom
 
         switch (biome) {
             case SNOWY_TUNDRA:
-                if (random < 0.001f) {  
+                if (random < 0.001f) {
                     generateIceSpike(x, z, maxY, voxels);
                 }
                 break;
             case MOUNTAINS:
-                if (maxY < 100 && random < 0.001f) { 
+                if (maxY < 100 && random < 0.001f) {
                     generateTree(x, z, maxY, voxels);
                 }
                 break;
 
             case PLAINS:
-                if (random < 0.2f) { 
+                if (random < 0.2f) {
                     voxels[coordsToIndex({x, maxY, z})] = new Voxel({x, maxY, z}, TALLGRASS, true);
                 }
 
             case FOREST:
-                if (random < 0.01f) { 
+                if (random < 0.01f) {
                     generateTree(x, z, maxY, voxels);
-                } else if (random < 0.2f) { 
+                } else if (random < 0.2f) {
                     voxels[coordsToIndex({x, maxY, z})] = new Voxel({x, maxY, z}, TALLGRASS, true);
                 }
                 break;
             case DESERT:
-                if (random < 0.003f) {  
+                if (random < 0.003f) {
                     generateCactus(x, z, maxY, voxels);
                 }
                 break;
@@ -232,8 +232,8 @@ void TerrainGenerator::generateIceSpike(int x, int z, int y, std::vector<Voxel*>
 
 unsigned int TerrainGenerator::coordsToIndex(glm::vec3 coords) const {
     return static_cast<unsigned int>(
-        coords.x + 
-        coords.y * width + 
+        coords.x +
+        coords.y * width +
         coords.z * width * height
     );
 }

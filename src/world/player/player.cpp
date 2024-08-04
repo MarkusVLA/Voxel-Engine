@@ -5,17 +5,40 @@
 
 Player::Player(Camera* camera, ChunkManager* chunkManager)
     : camera(camera), chunkManager(chunkManager),
-      size(1.0f, 2.0f, 1.0f), moveSpeed(50.0f) {}
+      size(1.0f, 3.0f, 1.0f), moveSpeed(10.0f),
+      velocity(0.0f), isOnGround(false),
+      gravity(-20.8f), jumpForce(7.0f) {}
 
 Player::~Player() {
     delete camera;
 }
 
-void Player::update(float deltaTime) { /* */ }
+void Player::update(float deltaTime) {
+    applyGravity(deltaTime);
+    updatePosition(deltaTime);
+}
+
+void Player::applyGravity(float deltaTime) {
+    velocity.y += gravity * deltaTime;
+}
+
+void Player::updatePosition(float deltaTime) {
+    glm::vec3 newPosition = camera->getPosition() + velocity * deltaTime;
+    glm::vec3 finalPosition = handleCollision(newPosition);
+
+    isOnGround = (finalPosition.y == camera->getPosition().y && velocity.y < 0);
+
+    if (isOnGround) {
+        velocity.y = 0;
+    }
+
+    camera->setPosition(finalPosition);
+}
 
 void Player::move(PlayerMovement direction, float deltaTime) {
     float speed = moveSpeed * deltaTime;
     glm::vec3 movement(0.0f);
+
     switch (direction) {
         case FORWARD:
             movement = camera->getFront() * speed;
@@ -30,17 +53,25 @@ void Player::move(PlayerMovement direction, float deltaTime) {
             movement = camera->getRight() * speed;
             break;
         case UP:
-            movement = glm::vec3(0.0, 1.0, 0.0) * speed;
-            break;
+            if (isOnGround) {
+                velocity.y = jumpForce;
+                isOnGround = false;
+            }
+            return;
         case DOWN:
-            movement = glm::vec3(0.0, -1.0, 0.0) * speed;
-            break;
+            return;
+
         default:
-            break;
+            return;
     }
+
+    // Remove vertical component from movement for walking
+    movement.y = 0;
+
+    // Apply movement directly to position
     glm::vec3 newPosition = camera->getPosition() + movement;
-    newPosition = handleCollision(newPosition);
-    camera->setPosition(newPosition);
+    glm::vec3 finalPosition = handleCollision(newPosition);
+    camera->setPosition(finalPosition);
 }
 
 glm::vec3 Player::getPosition() const {
@@ -64,7 +95,7 @@ bool Player::checkCollision(const glm::vec3& position) {
                 std::shared_ptr<Chunk> chunk = chunkManager->getChunk(chunkPos);
                 if (chunk) {
                     Voxel* voxel = chunk->getVoxel(localPos);
-                    if (voxel != nullptr && voxel->getType() != WATER) {
+                    if (voxel != nullptr && !voxel->getStopsEntities()) { // Handle also tall grass
                         return true;
                     }
                 }

@@ -22,10 +22,13 @@ public:
     void update(float deltaTime);
     void move(PlayerMovement direction, float deltaTime);
     void applyGravity(float deltaTime);
-    bool isOnGround() const;
     void setPosition(const glm::vec3& newPosition);
     glm::vec3 getPosition() const;
     Camera* getCamera();
+
+    void jump();
+    void updatePosition(float deltaTime);
+    void applyMovement(PlayerMovement direction, float deltaTime);
 
 private:
     Camera* camera;
@@ -33,9 +36,12 @@ private:
     glm::vec3 velocity;
     glm::vec3 size; // Player's bounding box
     bool onGround;
-    float jumpForce;
-    float gravity;
     float moveSpeed;
+
+    bool isOnGround;
+    float gravity;
+    float jumpForce;
+    float walkSpeed;
 
     bool checkCollision(const glm::vec3& newPosition);
     glm::vec3 handleCollision(const glm::vec3& newPosition);

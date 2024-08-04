@@ -1,11 +1,10 @@
-// game.cpp
 #include "game.h"
 
-#include "game.h"
 
 Game::Game()
     : window(WINDO_WIDTH, WINDOW_HEIGHT, "OpenGL Window"),
       player(new Camera(glm::vec3(0.0f, 128.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, 0.0f), &chunkManager),
+      seed(420),
       chunkManager(CHUNK_WIDTH, CHUNK_HEIGHT, CHUNK_DEPTH, VIEW_DISTANCE),
       lastUpdatePosition(0.0f, 128.0f, 0.0f),
       lastFrame(0.0),
@@ -13,6 +12,7 @@ Game::Game()
       fps(0.0f),
       lastFPSPrintTime(0.0)
 {
+    chunkManager.init(seed);
     initialize();
 }
 
