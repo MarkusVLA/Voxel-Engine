@@ -52,10 +52,11 @@ void Renderer::initOpenGL() {
 }
 
 
+
 void Renderer::initShaders() {
     try {
-        objectShader = new Shader("../shaders/triangle.vert", "../shaders/triangle.frag");
-        skyboxShader = new Shader("../shaders/skybox.vert", "../shaders/skybox.frag");
+        objectShader = new Shader("../src/shaders/triangle.vert", "../src/shaders/triangle.frag");
+        skyboxShader = new Shader("../src/shaders/skybox.vert", "../src/shaders/skybox.frag");
     } catch (const std::exception& e) {
         std::cerr << "Shader compilation failed: " << e.what() << std::endl;
         throw;

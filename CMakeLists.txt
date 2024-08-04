@@ -61,6 +61,7 @@ include_directories(libs/imgui/backends)
 
 add_executable(app
     src/main.cpp
+    src/game.cpp
     src/engine/renderer/renderer.cpp
     src/engine/renderer/shader.cpp
     src/engine/renderer/texture_loader.cpp
@@ -78,26 +79,25 @@ add_executable(app
 
 target_link_libraries(app ${OPENGL_gl_LIBRARY} glm glfw glad freetype imgui)
 
+# Set output directories
 set_target_properties(app PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/game/bin
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+    RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/bin
+    RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/bin
+    RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO ${CMAKE_BINARY_DIR}/bin
+    RUNTIME_OUTPUT_DIRECTORY_MINSIZEREL ${CMAKE_BINARY_DIR}/bin
 )
 
+# Ensure the output directories exist before linking
 add_custom_command(TARGET app PRE_BUILD
     COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/game/bin
     COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/game/shaders
     COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/game/assets
 )
 
+# Custom target to copy executable to game/bin after build
 add_custom_command(TARGET app POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:app> ${CMAKE_BINARY_DIR}/game/bin/$<TARGET_FILE_NAME:app>
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/src/shaders ${CMAKE_BINARY_DIR}/game/shaders
     COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/assets ${CMAKE_BINARY_DIR}/game/assets
 )
-
-add_custom_target(copy_compile_commands ALL
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-    ${CMAKE_BINARY_DIR}/compile_commands.json
-    ${CMAKE_BINARY_DIR}/compile_commands.json
-    DEPENDS ${CMAKE_BINARY_DIR}/compile_commands.json
-)
-
-add_dependencies(app copy_compile_commands)

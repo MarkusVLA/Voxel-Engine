@@ -1,8 +1,12 @@
-#include <glad/glad.h>  
+#include <ConditionalMacros.h>
+#include <MacTypes.h>
+#include <glad/glad.h>
 #include "window.h"
 #include <iostream>
+#include <sys/_types/_time_t.h>
+#include <variant>
 
-Window::Window(int width, int height, const std::string& title) {
+Window::Window(int width, int height, const std::string& title): deltaTime(0.0f) {
     if (!glfwInit()) {
         std::cerr << "Failed to initialize GLFW" << std::endl;
         exit(EXIT_FAILURE);
@@ -67,4 +71,12 @@ void Window::toggleCursorMode() {
 
 bool Window::isCursorEnabled() const {
     return cursorEnabled;
+}
+
+
+float Window::getDeltaTime() {
+    auto currentFrameTime = std::chrono::steady_clock::now();
+    deltaTime = std::chrono::duration<float, std::chrono::seconds::period>(currentFrameTime - lastFrameTime).count();
+    lastFrameTime = currentFrameTime;
+    return deltaTime;
 }

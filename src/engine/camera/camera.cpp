@@ -1,9 +1,12 @@
 #include "camera.h"
+#include "glm/fwd.hpp"
+#include <complex.h>
+#include <xlocale/_stdio.h>
 
 // Default camera values
 const float YAW = -90.0f;
 const float PITCH = 0.0f;
-const float SPEED = 100.0f;
+const float SPEED = 50.0f;
 const float SENSITIVITY = 0.1f;
 const float ZOOM = 20.0f;
 
@@ -22,14 +25,35 @@ glm::mat4 Camera::getViewMatrix() {
 
 void Camera::processKeyboard(CameraMovement direction, float deltaTime) {
     float velocity = movementSpeed * deltaTime;
-    if (direction == FORWARD)
-        position += front * velocity;
-    if (direction == BACKWARD)
-        position -= front * velocity;
-    if (direction == LEFT)
-        position -= right * velocity;
-    if (direction == RIGHT)
-        position += right * velocity;
+
+    switch (direction) {
+        case FORWARD:
+            position += front * velocity;
+            break;
+
+        case BACKWARD:
+            position -= front * velocity;
+            break;
+
+        case LEFT:
+            position -= right * velocity;
+            break;
+
+        case RIGHT:
+            position += right * velocity;
+            break;
+
+        case UP:
+            position += glm::vec3(0.0, 1.0, 0.0) * velocity; // Up and down don't depend on camera
+            break;
+
+        case DOWN:
+            position += glm::vec3(0.0, -1.0, 0.0) * velocity;
+            break;
+
+        default:
+            break;
+    }
 }
 
 void Camera::processMouseMovement(float xoffset, float yoffset, bool constrainPitch) {

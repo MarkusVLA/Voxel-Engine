@@ -1,6 +1,7 @@
 #include "input_listener.h"
 #include "../window/window.h"
 #include "../../world/chunk/chunk_manager.h"
+#include "GLFW/glfw3.h"
 #include <iostream>
 
 Camera* InputListener::camera = nullptr;
@@ -9,6 +10,7 @@ float InputListener::lastX = 800.0f / 2.0f;
 float InputListener::lastY = 600.0f / 2.0f;
 Window* InputListener::window = nullptr;
 ChunkManager* InputListener::chunkManager = nullptr;
+bool InputListener::keys[1024] = { false };
 std::chrono::steady_clock::time_point InputListener::lastEscapePress = std::chrono::steady_clock::now();
 const std::chrono::milliseconds InputListener::escCooldown = std::chrono::milliseconds(200); // 200ms cooldown
 
@@ -24,7 +26,6 @@ void InputListener::setChunkManager(ChunkManager* cm) {
     chunkManager = cm;
 }
 
-
 void InputListener::keyCallback(GLFWwindow* glfwWindow, int key, int scancode, int action, int mods) {
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
         auto now = std::chrono::steady_clock::now();
@@ -34,24 +35,30 @@ void InputListener::keyCallback(GLFWwindow* glfwWindow, int key, int scancode, i
         }
     }
 
-    if (action == GLFW_PRESS || action == GLFW_REPEAT) {
-        if (!window->isCursorEnabled() && camera) {
-            switch (key) {
-                case GLFW_KEY_W:
-                    camera->processKeyboard(FORWARD, 0.01f);
-                    break;
-                case GLFW_KEY_S:
-                    camera->processKeyboard(BACKWARD, 0.01f);
-                    break;
-                case GLFW_KEY_A:
-                    camera->processKeyboard(LEFT, 0.01f);
-                    break;
-                case GLFW_KEY_D:
-                    camera->processKeyboard(RIGHT, 0.01f);
-                    break;
-                default:
-                    break;
-            }
+    if (key >= 0 && key < 1024) {
+        if (action == GLFW_PRESS)
+            keys[key] = true;
+        else if (action == GLFW_RELEASE)
+            keys[key] = false;
+    }
+}
+
+void InputListener::update() {
+    if (!window->isCursorEnabled() && camera) {
+        float deltaTime = window->getDeltaTime();
+        if (keys[GLFW_KEY_W])
+            camera->processKeyboard(FORWARD, deltaTime);
+        if (keys[GLFW_KEY_S])
+            camera->processKeyboard(BACKWARD, deltaTime);
+        if (keys[GLFW_KEY_A])
+            camera->processKeyboard(LEFT, deltaTime);
+        if (keys[GLFW_KEY_D])
+            camera->processKeyboard(RIGHT, deltaTime);
+        if (keys[GLFW_KEY_SPACE]){
+            camera->processKeyboard(UP, deltaTime);
+        }
+        if (keys[GLFW_KEY_LEFT_SHIFT]){
+            camera->processKeyboard(DOWN, deltaTime);
         }
     }
 }
@@ -79,7 +86,6 @@ void InputListener::scrollCallback(GLFWwindow* glfwWindow, double xoffset, doubl
     }
 }
 
-
 void InputListener::mouseButtonCallback(GLFWwindow* glfwWindow, int button, int action, int mods) {
     if (action == GLFW_PRESS && !window->isCursorEnabled() && camera && chunkManager) {
         glm::vec3 cameraPos = camera->getPosition();
@@ -87,9 +93,9 @@ void InputListener::mouseButtonCallback(GLFWwindow* glfwWindow, int button, int 
         float maxInteractionDistance = 5.0f; // Adjust this value as needed
 
         if (button == GLFW_MOUSE_BUTTON_LEFT) {
-            ;;
+            // Add left mouse button action here
         } else if (button == GLFW_MOUSE_BUTTON_RIGHT) {
-            ;;
+            // Add right mouse button action here
         }
     }
 }
