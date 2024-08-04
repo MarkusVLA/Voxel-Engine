@@ -4,6 +4,7 @@
 #include "engine/window/window.h"
 #include "engine/input_listener/input_listener.h"
 #include "engine/camera/camera.h"
+#include "glm/fwd.hpp"
 #include "world/skybox.h"
 #include "world/chunk/chunk_manager.h"
 #include "engine/window/GUI/gui.h"
@@ -15,7 +16,6 @@ int main() {
     #ifdef DEBUG_MODE
     std::cout << "Running in debug mode," << std::endl;
     #endif
-
     Window window(WINDO_WIDTH, WINDOW_HEIGHT, "OpenGL Window");
     Camera camera(glm::vec3(0.0f, 128.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, 0.0f);
     InputListener::setCamera(&camera);

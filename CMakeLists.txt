@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.2)
 project(OpenGL)
 set(CMAKE_CXX_STANDARD 20)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
 endif()
@@ -18,7 +20,7 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 endif()
 
 find_package(OpenGL REQUIRED)
-
+include_directories(libs)
 add_subdirectory(libs/glfw)
 add_subdirectory(libs/glm)
 add_subdirectory(libs/freetype)
@@ -38,15 +40,14 @@ set(IMGUI_SOURCES
 
 add_library(imgui STATIC ${IMGUI_SOURCES})
 
-target_include_directories(imgui PUBLIC 
+target_include_directories(imgui PUBLIC
     libs/imgui
     libs/imgui/backends
     ${OPENGL_INCLUDE_DIR}
 )
 
-target_link_libraries(imgui PUBLIC 
+target_link_libraries(imgui PUBLIC
     ${OPENGL_gl_LIBRARY}
-    
 )
 
 include_directories(${OPENGL_INCLUDE_DIR})
@@ -76,3 +77,27 @@ add_executable(app
 )
 
 target_link_libraries(app ${OPENGL_gl_LIBRARY} glm glfw glad freetype imgui)
+
+set_target_properties(app PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/game/bin
+)
+
+add_custom_command(TARGET app PRE_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/game/bin
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/game/shaders
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/game/assets
+)
+
+add_custom_command(TARGET app POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/src/shaders ${CMAKE_BINARY_DIR}/game/shaders
+    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/assets ${CMAKE_BINARY_DIR}/game/assets
+)
+
+add_custom_target(copy_compile_commands ALL
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    ${CMAKE_BINARY_DIR}/compile_commands.json
+    ${CMAKE_BINARY_DIR}/compile_commands.json
+    DEPENDS ${CMAKE_BINARY_DIR}/compile_commands.json
+)
+
+add_dependencies(app copy_compile_commands)
