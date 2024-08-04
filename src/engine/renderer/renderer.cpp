@@ -8,15 +8,15 @@
 #include "../../global.h"
 
 
-Renderer::Renderer() 
+Renderer::Renderer()
     : shouldExit(false), textureLoaded(false), objectShader(nullptr), skyboxShader(nullptr) {
     initOpenGL();
     camera = nullptr;
     projection = glm::perspective(
 
-        glm::radians(45.0f), 
-        WINDO_WIDTH / WINDOW_HEIGHT, 
-        RENDERER_NEAR_PLANE_DISTANCE, 
+        glm::radians(45.0f),
+        WINDO_WIDTH / WINDOW_HEIGHT,
+        RENDERER_NEAR_PLANE_DISTANCE,
         RENDERER_FAR_PLANE_DISTANCE
     );
 }
@@ -54,8 +54,8 @@ void Renderer::initOpenGL() {
 
 void Renderer::initShaders() {
     try {
-        objectShader = new Shader("../src/shaders/triangle.vert", "../src/shaders/triangle.frag");
-        skyboxShader = new Shader("../src/shaders/skybox.vert", "../src/shaders/skybox.frag");
+        objectShader = new Shader("../shaders/triangle.vert", "../shaders/triangle.frag");
+        skyboxShader = new Shader("../shaders/skybox.vert", "../shaders/skybox.frag");
     } catch (const std::exception& e) {
         std::cerr << "Shader compilation failed: " << e.what() << std::endl;
         throw;
@@ -258,7 +258,7 @@ void Renderer::draw() {
             }
         }
         glDisable(GL_BLEND);
-        glUseProgram(0); 
+        glUseProgram(0);
     }
 
 
@@ -266,7 +266,7 @@ void Renderer::draw() {
     if (skyboxShader) {
         glDepthFunc(GL_LEQUAL);
         skyboxShader->use();
-        glm::mat4 skyboxView = glm::mat4(glm::mat3(view)); 
+        glm::mat4 skyboxView = glm::mat4(glm::mat3(view));
         skyboxShader->setMat4("view", skyboxView);
         skyboxShader->setMat4("projection", projection);
         skyboxShader->setFloat("time", static_cast<float>(glfwGetTime()));
@@ -296,7 +296,7 @@ void Renderer::setupShaderUniforms(Shader* shader, const glm::mat4& view, glm::m
     shader->setFloat("ambientStrength", 0.2f);
     shader->setVec3("fogColor", glm::vec3(0.7f, 0.8f, 0.9f));
     shader->setFloat("fogDensity", 0.002f);
-    shader->setFloat("time", static_cast<float>(glfwGetTime())); 
+    shader->setFloat("time", static_cast<float>(glfwGetTime()));
 }
 
 
