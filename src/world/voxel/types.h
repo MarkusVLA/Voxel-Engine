@@ -3,12 +3,13 @@
 
 
 enum VoxelType{
-    
-    
-    GRASS = 0, 
+
+
+    GRASS = 0,
     STONE = 1,
     DIRT = 2,
     BRICK = 7,
+    FLOWER = 12,
     COBBLESTONE = 16,
     SAND = 18,
     GRAVEL = 19,

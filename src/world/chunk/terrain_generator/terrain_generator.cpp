@@ -156,7 +156,6 @@ void TerrainGenerator::addSurfaceFeatures(int x, int z, int maxY, BiomeType biom
     if (maxY < height - 1 && maxY > waterLevel) {
         // Use random number for feature generation
         float random = static_cast<float>(rand()) / RAND_MAX;
-
         switch (biome) {
             case SNOWY_TUNDRA:
                 if (random < 0.001f) {
@@ -168,15 +167,18 @@ void TerrainGenerator::addSurfaceFeatures(int x, int z, int maxY, BiomeType biom
                     generateTree(x, z, maxY, voxels, outsideChunkVoxels);
                 }
                 break;
-
             case PLAINS:
-                if (random < 0.2f) {
+                if (random < 0.05f) {
+                    voxels[coordsToIndex({x, maxY, z})] = new Voxel({x, maxY, z}, FLOWER, true);
+                } else if (random < 0.2f) {
                     voxels[coordsToIndex({x, maxY, z})] = new Voxel({x, maxY, z}, TALLGRASS, true);
                 }
-
+                break;
             case FOREST:
                 if (random < 0.01f) {
                     generateTree(x, z, maxY, voxels, outsideChunkVoxels);
+                } else if (random < 0.05f) {
+                    voxels[coordsToIndex({x, maxY, z})] = new Voxel({x, maxY, z}, FLOWER, true);
                 } else if (random < 0.2f) {
                     voxels[coordsToIndex({x, maxY, z})] = new Voxel({x, maxY, z}, TALLGRASS, true);
                 }
@@ -189,6 +191,7 @@ void TerrainGenerator::addSurfaceFeatures(int x, int z, int maxY, BiomeType biom
         }
     }
 }
+
 
 void TerrainGenerator::generateTree(int x, int z, int y, std::vector<Voxel*>& voxels, std::vector<Voxel*>& outsideChunkVoxels) {
     int treeHeight = 4 + rand() % 3;

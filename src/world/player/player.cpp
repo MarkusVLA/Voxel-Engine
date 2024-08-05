@@ -95,7 +95,7 @@ bool Player::checkCollision(const glm::vec3& position) {
                 std::shared_ptr<Chunk> chunk = chunkManager->getChunk(chunkPos);
                 if (chunk) {
                     Voxel* voxel = chunk->getVoxel(localPos);
-                    if (voxel != nullptr && !voxel->getStopsEntities()) { // Handle also tall grass
+                    if (voxel != nullptr && voxel->getType() != WATER) { // Handle also tall grass
                         return true;
                     }
                 }
