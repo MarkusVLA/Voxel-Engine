@@ -139,7 +139,7 @@ void Chunk::updateMesh() {
 
 
 bool Chunk::shouldRenderFace(const Voxel* voxel) const {
-    return !voxel || voxel->getType() == WATER || voxel->getType() == LEAVES || voxel->getIsXShaped();
+    return !voxel || voxel->getType() == WATER || voxel->getType() == LEAVES || voxel->getType() == CACTUS || voxel->getIsXShaped();
     // Transparent voxels should not cause faces to be hidden.
     // Optimise leaves to occlude each other later.
 }

@@ -5,8 +5,9 @@
 #include <ctime>
 
 int main(int argc, char *argv[]) {
+
     #ifdef DEBUG_MODE
-    std::cout << "Running in debug mode." << std::endl;
+        std::cout << "Running in debug mode." << std::endl;
     #endif
 
     unsigned int seed;
