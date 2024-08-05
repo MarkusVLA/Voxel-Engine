@@ -12,7 +12,7 @@ ChunkManager::ChunkManager(int chunkWidth, int chunkHeight, int chunkDepth, int 
 
 void ChunkManager::init(unsigned int s){
     seed = s;
-    startWorkers(1);
+    startWorkers(4);
     running = true;
 }
 

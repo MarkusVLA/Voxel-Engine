@@ -2,10 +2,10 @@
 #include "engine/camera/camera.h"
 
 
-Game::Game()
+Game::Game(unsigned int seed)
     : window(WINDOW_WIDTH, WINDOW_HEIGHT, "OpenGL Window"),
       player(new Camera(glm::vec3(0.0f, 128.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, 0.0f), &chunkManager),
-      seed(420),
+      seed(seed),
       chunkManager(CHUNK_WIDTH, CHUNK_HEIGHT, CHUNK_DEPTH, VIEW_DISTANCE),
       lastUpdatePosition(0.0f, 128.0f, 0.0f),
       lastFrame(0.0),

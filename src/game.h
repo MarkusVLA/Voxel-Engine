@@ -16,7 +16,7 @@
 
 class Game {
 public:
-    Game();
+    Game(unsigned int seed);
     void run();
 private:
     void initialize();

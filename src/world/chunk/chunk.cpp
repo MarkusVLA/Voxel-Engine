@@ -9,7 +9,6 @@ Chunk::Chunk(int width, int height, int depth, glm::vec2 index, ChunkManager* ma
       terrainGenerator(width, height, depth, index, seed) {
     std::srand(static_cast<unsigned>(std::time(0)));
     terrainGenerator.generateTerrain(voxels, voxelsOutsideChunk);
-    std::cout << voxelsOutsideChunk.size() << std::endl;
 }
 
 Chunk::~Chunk() {
