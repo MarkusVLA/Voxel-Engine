@@ -4,9 +4,9 @@
 #include <cmath>
 
 const std::array<BiomeParams, 5> TerrainGenerator::biomeParameters = {{
-    {64, 10, -0.5f, 0.0f},  // SNOWY_TUNDRA
-    {64, 32, 0.0f, 0.3f},  // MOUNTAINS
-    {64, 8, 0.3f, 0.3f},    // PLAINS
+    {64, 2, -0.5f, 0.0f},  // SNOWY_TUNDRA
+    {64, 28, 0.0f, 0.3f},  // MOUNTAINS
+    {64, 2, 0.3f, 0.3f},    // PLAINS
     {64, 15, 0.3f, 0.6f},   // FOREST
     {64, 6, 0.7f, 0.0f}     // DESERT
 }};
@@ -168,7 +168,7 @@ void TerrainGenerator::addSurfaceFeatures(int x, int z, int maxY, BiomeType biom
                 }
                 break;
             case PLAINS:
-                if (random < 0.05f) {
+                if (random < 0.01f) {
                     voxels[coordsToIndex({x, maxY, z})] = new Voxel({x, maxY, z}, FLOWER, true);
                 } else if (random < 0.2f) {
                     voxels[coordsToIndex({x, maxY, z})] = new Voxel({x, maxY, z}, TALLGRASS, true);

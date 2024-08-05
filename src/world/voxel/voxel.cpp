@@ -3,7 +3,7 @@
 
 Voxel::Voxel(glm::vec3 position, VoxelType type, bool isXShaped)
     : position(position), type(type), isXShaped(isXShaped),
-      stopsEntities(type == WATER || type == TALLGRASS ? true: false),
+      stopsEntities(type == WATER || type == TALLGRASS || type == FLOWER ? true: false),
       translucent(type == WATER ? true : false) { /* */}
 
 glm::vec3 Voxel::getPosition() const { return position; }
