@@ -22,7 +22,7 @@ private:
     void initialize();
     void handleInput(float deltaTime);
     Window window;
-    Player player; // Add this line
+    Player player;
     SkyBox skyBox;
     ChunkManager chunkManager;
     Renderer renderer;

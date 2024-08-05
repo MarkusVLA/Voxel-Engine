@@ -16,8 +16,9 @@ TerrainGenerator::TerrainGenerator(int width, int height, int depth, glm::vec2 i
     std::srand(seed);
 }
 
-void TerrainGenerator::generateTerrain(std::vector<Voxel*>& voxels) {
+void TerrainGenerator::generateTerrain(std::vector<Voxel*>& voxels, std::vector<Voxel*>& outsideChunkVoxels) {
     voxels.resize(width * height * depth, nullptr);
+    // No need to resize the outside chunk voxels, as they won't be hashed.
 
     const int waterLevel = 62;
     const float biomeScale = 0.001f;
@@ -56,7 +57,7 @@ void TerrainGenerator::generateTerrain(std::vector<Voxel*>& voxels) {
             }
 
             // Add surface features
-            addSurfaceFeatures(x, z, maxY, primaryBiome, waterLevel, voxels);
+            addSurfaceFeatures(x, z, maxY, primaryBiome, waterLevel, voxels, outsideChunkVoxels);
         }
     }
 }
@@ -151,7 +152,7 @@ void TerrainGenerator::generateOres(int x, int y, int z, unsigned int voxelIndex
     }
 }
 
-void TerrainGenerator::addSurfaceFeatures(int x, int z, int maxY, BiomeType biome, int waterLevel, std::vector<Voxel*>& voxels) {
+void TerrainGenerator::addSurfaceFeatures(int x, int z, int maxY, BiomeType biome, int waterLevel, std::vector<Voxel*>& voxels, std::vector<Voxel*>& outsideChunkVoxels) {
     if (maxY < height - 1 && maxY > waterLevel) {
         // Use random number for feature generation
         float random = static_cast<float>(rand()) / RAND_MAX;
@@ -164,7 +165,7 @@ void TerrainGenerator::addSurfaceFeatures(int x, int z, int maxY, BiomeType biom
                 break;
             case MOUNTAINS:
                 if (maxY < 100 && random < 0.001f) {
-                    generateTree(x, z, maxY, voxels);
+                    generateTree(x, z, maxY, voxels, outsideChunkVoxels);
                 }
                 break;
 
@@ -175,7 +176,7 @@ void TerrainGenerator::addSurfaceFeatures(int x, int z, int maxY, BiomeType biom
 
             case FOREST:
                 if (random < 0.01f) {
-                    generateTree(x, z, maxY, voxels);
+                    generateTree(x, z, maxY, voxels, outsideChunkVoxels);
                 } else if (random < 0.2f) {
                     voxels[coordsToIndex({x, maxY, z})] = new Voxel({x, maxY, z}, TALLGRASS, true);
                 }
@@ -189,7 +190,7 @@ void TerrainGenerator::addSurfaceFeatures(int x, int z, int maxY, BiomeType biom
     }
 }
 
-void TerrainGenerator::generateTree(int x, int z, int y, std::vector<Voxel*>& voxels) {
+void TerrainGenerator::generateTree(int x, int z, int y, std::vector<Voxel*>& voxels, std::vector<Voxel*>& outsideChunkVoxels) {
     int treeHeight = 4 + rand() % 3;
     for (int i = 0; i < treeHeight; ++i) {
         if (y + i < height) {
@@ -205,7 +206,11 @@ void TerrainGenerator::generateTree(int x, int z, int y, std::vector<Voxel*>& vo
                     int leafZ = z + dz;
                     if (leafX >= 0 && leafX < width && leafZ >= 0 && leafZ < depth) {
                         voxels[coordsToIndex({leafX, leafY, leafZ})] = new Voxel({leafX, leafY, leafZ}, LEAVES);
+                    } else {
+                        // Voxels outside the chunk are not hashed.
+                        outsideChunkVoxels.push_back(new Voxel({leafX, leafY, leafZ}, LEAVES));
                     }
+
                 }
             }
         }

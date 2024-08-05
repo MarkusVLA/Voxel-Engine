@@ -28,7 +28,7 @@ struct BiomeParams {
 class TerrainGenerator {
 public:
     TerrainGenerator(int width, int height, int depth, glm::vec2 index, unsigned int seed);
-    void generateTerrain(std::vector<Voxel*>& voxels);
+    void generateTerrain(std::vector<Voxel*>& voxels, std::vector<Voxel*>& outsideChunkVoxels);
 
 private:
     std::tuple<BiomeType, BiomeType, float> determineBiome(float temperature, float humidity);
@@ -36,8 +36,8 @@ private:
     VoxelType determineBlockType(int y, int maxY, BiomeType biome, int waterLevel);
     float generateCaveDensity(int x, int y, int z);
     void generateOres(int x, int y, int z, unsigned int voxelIndex, VoxelType blockType, std::vector<Voxel*>& voxels);
-    void addSurfaceFeatures(int x, int z, int maxY, BiomeType biome, int waterLevel, std::vector<Voxel*>& voxels);
-    void generateTree(int x, int z, int y, std::vector<Voxel*>& voxels);
+    void addSurfaceFeatures(int x, int z, int maxY, BiomeType biome, int waterLevel, std::vector<Voxel*>& voxels, std::vector<Voxel*>& outsideChunkVoxels);
+    void generateTree(int x, int z, int y, std::vector<Voxel*>& voxels, std::vector<Voxel*>& outsideChunkVoxels);
     void generateCactus(int x, int z, int y, std::vector<Voxel*>& voxels);
     void generateIceSpike(int x, int z, int y, std::vector<Voxel*>& voxels);
     unsigned int coordsToIndex(glm::vec3 coords) const;
@@ -45,7 +45,6 @@ private:
     int width, height, depth;
     glm::vec2 index_;
     Perlin perlinNoise;
-
     static const std::array<BiomeParams, 5> biomeParameters;
 };
 

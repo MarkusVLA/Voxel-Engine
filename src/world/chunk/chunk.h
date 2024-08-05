@@ -25,11 +25,11 @@ public:
     void setVoxel(const glm::vec3& pos, VoxelType type);
     glm::vec2 getIndex() const;
     bool operator==(const Chunk& other) const;
-
+    void placeOutsideVoxels();
     void updateMesh();
 
 private:
-    void addVoxelMesh(Voxel* voxel, const glm::vec3& offset, uint8_t faceFlags,
+    void addVoxelMesh(Voxel* voxel, const glm::vec3& offset, uint8_t faceFlsags,
                       std::vector<float>& vertices, std::vector<unsigned int>& indices,
                       unsigned int& baseIndex) const;
     glm::vec3 indexToCoords(int index) const;
@@ -49,6 +49,10 @@ private:
     ChunkManager* manager;
     std::tuple<std::vector<float>, std::vector<unsigned int>,
                std::vector<float>, std::vector<unsigned int>> cachedMesh;
+
+    std::vector<Voxel*> voxelsOutsideChunk; // Store voxels generated outside the chunk, and pass to neighbouring chunk.
+
+
 };
 
 #endif // CHUNK_H

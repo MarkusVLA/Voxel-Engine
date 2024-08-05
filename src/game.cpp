@@ -1,8 +1,9 @@
 #include "game.h"
+#include "engine/camera/camera.h"
 
 
 Game::Game()
-    : window(WINDO_WIDTH, WINDOW_HEIGHT, "OpenGL Window"),
+    : window(WINDOW_WIDTH, WINDOW_HEIGHT, "OpenGL Window"),
       player(new Camera(glm::vec3(0.0f, 128.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f), -90.0f, 0.0f), &chunkManager),
       seed(420),
       chunkManager(CHUNK_WIDTH, CHUNK_HEIGHT, CHUNK_DEPTH, VIEW_DISTANCE),
@@ -36,6 +37,7 @@ void Game::initialize() {
 void Game::run() {
     lastFrame = glfwGetTime();
     lastFPSPrintTime = glfwGetTime();
+    lastUpdatePosition = player.getCamera()->getPosition(); // Make sure chunks load when the game starts;
     while (!window.shouldClose()) {
         double currentFrame = glfwGetTime();
         double deltaTime = currentFrame - lastFrame;

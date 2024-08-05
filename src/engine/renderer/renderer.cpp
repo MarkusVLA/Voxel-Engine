@@ -15,7 +15,7 @@ Renderer::Renderer()
     projection = glm::perspective(
 
         glm::radians(45.0f),
-        WINDO_WIDTH / WINDOW_HEIGHT,
+        WINDOW_WIDTH / WINDOW_HEIGHT,
         RENDERER_NEAR_PLANE_DISTANCE,
         RENDERER_FAR_PLANE_DISTANCE
     );

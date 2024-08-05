@@ -7,7 +7,7 @@
 
 Player* InputListener::player = nullptr;
 bool InputListener::firstMouse = true;
-float InputListener::lastX = WINDO_WIDTH / 2.0f;
+float InputListener::lastX = WINDOW_WIDTH / 2.0f;
 float InputListener::lastY = WINDOW_HEIGHT / 2.0f;
 Window* InputListener::window = nullptr;
 ChunkManager* InputListener::chunkManager = nullptr;

@@ -8,9 +8,9 @@
 class Voxel {
 public:
 
-    Voxel(glm::vec3 position, int type, bool isXShaped = false);
+    Voxel(glm::vec3 position, VoxelType type, bool isXShaped = false);
     glm::vec3 getPosition() const;
-    int getType() const;
+    VoxelType getType() const;
     bool getIsXShaped() const;
     bool isTranslucent() const;
     std::vector<float> getVertexData(const glm::vec3& offset, uint8_t faceFlags, float ao) const;
@@ -19,7 +19,7 @@ public:
 
 private:
     glm::vec3 position;
-    int type;
+    VoxelType type;
     bool translucent;
     bool isXShaped;
     bool stopsEntities;

@@ -1,7 +1,7 @@
 #include "voxel.h"
 #include "types.h"
 
-Voxel::Voxel(glm::vec3 position, int type, bool isXShaped)
+Voxel::Voxel(glm::vec3 position, VoxelType type, bool isXShaped)
     : position(position), type(type), isXShaped(isXShaped),
       stopsEntities(type == WATER || type == TALLGRASS ? true: false),
       translucent(type == WATER ? true : false) { /* */}
@@ -10,7 +10,7 @@ glm::vec3 Voxel::getPosition() const { return position; }
 
 bool Voxel::getStopsEntities() const { return stopsEntities; }
 
-int Voxel::getType() const { return type; }
+VoxelType Voxel::getType() const { return type; }
 
 bool Voxel::getIsXShaped() const {
     return isXShaped;

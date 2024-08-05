@@ -1,12 +1,15 @@
 #include "chunk.h"
 #include "chunk_manager.h"
+#include <iostream>
+#include <ostream>
 
 
 Chunk::Chunk(int width, int height, int depth, glm::vec2 index, ChunkManager* manager, unsigned int seed)
     : width(width), height(height), depth(depth), index_(index), manager(manager),
       terrainGenerator(width, height, depth, index, seed) {
     std::srand(static_cast<unsigned>(std::time(0)));
-    terrainGenerator.generateTerrain(voxels);
+    terrainGenerator.generateTerrain(voxels, voxelsOutsideChunk);
+    std::cout << voxelsOutsideChunk.size() << std::endl;
 }
 
 Chunk::~Chunk() {
@@ -54,7 +57,7 @@ void Chunk::addVoxelMesh(Voxel* voxel, const glm::vec3& offset, uint8_t faceFlag
     std::vector<unsigned int> voxelIndices = voxel->getIndexData(baseIndex, faceFlags);
     indices.insert(indices.end(), voxelIndices.begin(), voxelIndices.end());
 
-    baseIndex += popcount(faceFlags) * 4;
+    baseIndex += popcount(faceFlags) * 4; // 4 vertices per face.
 }
 
 uint8_t Chunk::getFaceFlags(glm::vec3 pos) const {
@@ -137,7 +140,9 @@ void Chunk::updateMesh() {
 
 
 bool Chunk::shouldRenderFace(const Voxel* voxel) const {
-    return !voxel || voxel->getType() == WATER || voxel->getIsXShaped();
+    return !voxel || voxel->getType() == WATER || voxel->getType() == LEAVES || voxel->getIsXShaped();
+    // Transparent voxels should not cause faces to be hidden.
+    // Optimise leaves to occlude each other later.
 }
 
 Voxel* Chunk::getVoxel(const glm::vec3& pos) const {
@@ -179,4 +184,28 @@ glm::vec2 Chunk::getIndex() const {
 
 bool Chunk::operator==(const Chunk& other) const {
     return index_ == other.index_;
+}
+
+
+void Chunk::placeOutsideVoxels() {
+    for (Voxel* voxel : voxelsOutsideChunk) {
+        glm::vec2 chunkOffset(0);
+        glm::vec3 localPos = voxel->getPosition();
+
+        if (localPos.x < 0) chunkOffset.x = -1;
+        else if (localPos.x >= width) chunkOffset.x = 1;
+        if (localPos.z < 0) chunkOffset.y = -1;
+        else if (localPos.z >= depth) chunkOffset.y = 1;
+
+        std::shared_ptr<Chunk> neighborChunk = manager->getChunk(index_ + chunkOffset);
+
+        if (neighborChunk) {
+            glm::vec3 adjustedPos = localPos;
+            adjustedPos.x = (static_cast<int>(adjustedPos.x) + width) %  width;
+            adjustedPos.z = (static_cast<int>(adjustedPos.z) + depth) % depth;
+
+            neighborChunk->setVoxel(adjustedPos, voxel->getType());
+        }
+    }
+    voxelsOutsideChunk.clear();
 }

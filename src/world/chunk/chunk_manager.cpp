@@ -1,16 +1,17 @@
 #include "chunk_manager.h"
 #include <cstdlib>
 #include <iostream>
+#include <shared_mutex>
 #include <cmath>
 
 ChunkManager::ChunkManager(int chunkWidth, int chunkHeight, int chunkDepth, int viewDistance)
     : chunkWidth(chunkWidth), chunkHeight(chunkHeight), chunkDepth(chunkDepth), viewDistance(viewDistance),
-      running(false), lastLoadedCenterChunk(0, 0) {
+      running(false), lastLoadedCenterChunk(2, 2) {
 }
 
 void ChunkManager::init(unsigned int s){
     seed = s;
-    startWorkers(2);
+    startWorkers(4);
     running = true;
 }
 
@@ -130,6 +131,7 @@ void ChunkManager::updateChunks() {
     for (auto& [chunkPos, chunk] : chunks) {
         if (chunkStates[chunkPos] == ChunkGenerationState::GENERATED) {
             bool allNeighborsGenerated = true;
+
             for (const auto& offset : {glm::ivec2(1, 0), glm::ivec2(-1, 0), glm::ivec2(0, 1), glm::ivec2(0, -1)}) {
                 glm::ivec2 neighborPos = chunkPos + offset;
                 if (chunks.find(neighborPos) == chunks.end() || chunkStates[neighborPos] == ChunkGenerationState::QUEUED) {
@@ -137,11 +139,27 @@ void ChunkManager::updateChunks() {
                     break;
                 }
             }
+
             if (allNeighborsGenerated) {
                 chunkStates[chunkPos] = ChunkGenerationState::MESHING;
                 taskQueue.push([this, chunkPos, chunk] {
+                    // Place outside voxels
+                    chunk->placeOutsideVoxels();
+
+                    // Generate mesh for this chunk
                     auto [solidVertices, solidIndices, waterVertices, waterIndices] = chunk->getMesh();
                     renderQueue.push({chunkPos, std::move(solidVertices), std::move(solidIndices), std::move(waterVertices), std::move(waterIndices)});
+
+                    // Update neighboring chunks' meshes
+                    for (const auto& offset : {glm::ivec2(1, 0), glm::ivec2(-1, 0), glm::ivec2(0, 1), glm::ivec2(0, -1)}) {
+                        glm::ivec2 neighborPos = chunkPos + offset;
+                        auto neighborChunk = getChunk(neighborPos);
+                        if (neighborChunk) {
+                            auto [nSolidVertices, nSolidIndices, nWaterVertices, nWaterIndices] = neighborChunk->getMesh();
+                            renderQueue.push({neighborPos, std::move(nSolidVertices), std::move(nSolidIndices), std::move(nWaterVertices), std::move(nWaterIndices)});
+                        }
+                    }
+
                     std::lock_guard<std::mutex> lock(chunksMutex);
                     chunkStates[chunkPos] = ChunkGenerationState::MESHED;
                 });
