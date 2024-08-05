@@ -24,6 +24,15 @@ enum class ChunkGenerationState {
     MESHED
 };
 
+struct ChunkTask {
+    glm::ivec2 chunkPos;
+    float priority;
+    bool operator<(const ChunkTask& other) const {
+        return priority < other.priority;
+    }
+};
+
+
 class ChunkManager {
 public:
     ChunkManager(int chunkWidth, int chunkHeight, int chunkDepth, int viewDistance);
